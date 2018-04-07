@@ -9,6 +9,9 @@ public class ControlArm : MonoBehaviour
 {
     public bool isLeftArm; // Is this the left arm
     public Transform armTip; // The tip of the arm
+    public float armLength; // How long is the maximum arm length
+    public Transform bodyRotatingCenter; // What is the center that the body is rotating around
+
 
     // Use this for initialization
     void Start()
@@ -23,7 +26,7 @@ public class ControlArm : MonoBehaviour
         StretchArm(isLeftArm);
 
         // Test
-        TestControllerInput();
+        //TestControllerInput();
     }
 
     /// <summary>
@@ -81,15 +84,28 @@ public class ControlArm : MonoBehaviour
     {
         if (left)
         {
-            float length = Mathf.Sqrt(Mathf.Pow(Input.GetAxis("HorizontalLeft"), 2) + Mathf.Pow(Input.GetAxis("VerticalLeft"), 2));
+            float length = Mathf.Clamp01(Mathf.Sqrt(Mathf.Pow(Input.GetAxis("HorizontalLeft"), 2) + Mathf.Pow(Input.GetAxis("VerticalLeft"), 2)));
 
             armTip.localPosition = new Vector3(0, 0, length);
         }
         else
         {
-            float length = Mathf.Sqrt(Mathf.Pow(Input.GetAxis("HorizontalRight"), 2) + Mathf.Pow(Input.GetAxis("VerticalRight"), 2));
+            float length = Mathf.Clamp01(Mathf.Sqrt(Mathf.Pow(Input.GetAxis("HorizontalRight"), 2) + Mathf.Pow(Input.GetAxis("VerticalRight"), 2)));
 
             armTip.localPosition = new Vector3(0, 0, length);
         }
     }
+
+    /// <summary>
+    /// sudo:
+    /// On rotating arm
+    ///     if armTip collide obstacle
+    ///         if rotate left && body is on the right side of the normal of the colliding surface ||
+    ///            rotate right && body is on the left side of the normal of the colliding surface
+    ///         { don't keep rotate}
+    ///         
+    /// On extending arm
+    ///     if armTip collide obstacle
+    ///     { don't keep extending}
+    /// </summary>
 }
