@@ -10,6 +10,8 @@ public class CopyTransform : MonoBehaviour
     public bool copyRotation;
     public bool copyPosition;
     public Transform copyFrom;
+    public Vector3 localPositionOffset;
+    public Vector3 localEulerOffset;
 
     // Use this for initialization
     void Start()
@@ -23,10 +25,12 @@ public class CopyTransform : MonoBehaviour
         if(copyRotation)
         {
             transform.rotation = copyFrom.rotation;
+            transform.localEulerAngles += localEulerOffset;
         }
         if(copyPosition)
         {
             transform.position = copyFrom.position;
+            transform.localPosition += localPositionOffset;
         }
     }
 }
