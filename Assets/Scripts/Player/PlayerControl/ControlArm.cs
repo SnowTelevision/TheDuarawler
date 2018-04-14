@@ -9,6 +9,7 @@ public class ControlArm : MonoBehaviour
 {
     public bool isLeftArm; // Is this the left arm
     public Transform armTip; // The tip of the arm
+    public Transform arm; // The actual arm that extends from the center of the body to the arm tip
     public float armMaxLength; // How long is the maximum arm length
     public Transform bodyRotatingCenter; // What is the center that the body is rotating around
     public Transform body; // The main body
@@ -73,6 +74,8 @@ public class ControlArm : MonoBehaviour
             RotateBody();
             MoveBody();
         }
+
+        UpdateArmTransform();
 
         // Test
         //TestControllerInput();
@@ -143,6 +146,13 @@ public class ControlArm : MonoBehaviour
         }
     }
 
+    public void UpdateArmTransform()
+    {
+        arm.localPosition = armTip.localPosition / 2f; // Put the center of the arm in the middle between the armTip and the body center
+        //arm.localScale = new Vector3(1, 1, armTip.localPosition.z / 2f); // Extend the arm towards the armTip
+        arm.localScale = new Vector3(0.1f, armTip.localPosition.z / 2f, 0.1f); // Extend the arm towards the armTip
+    }
+
     /// <summary>
     /// Rotate the arm according to the joystick's rotation
     /// </summary>
@@ -176,7 +186,8 @@ public class ControlArm : MonoBehaviour
         // Calculate how long the arm extends
         armTip.localPosition = new Vector3(0, 0, joyStickLength * armMaxLength);
 
-        if (armTip.GetComponent<DetectCollision>().isColliding)
+        if (arm.GetComponentInChildren<DetectCollision>().isColliding)
+        //if (armTip.GetComponent<DetectCollision>().isColliding)
         {
             RaycastHit hit;
             // Don't extend if the armTip will go into collider
