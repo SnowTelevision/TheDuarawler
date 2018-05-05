@@ -7,8 +7,11 @@ using UnityEngine;
 /// </summary>
 public class DetectCollision : MonoBehaviour
 {
+
+
     public bool isColliding; // If the arm is colliding something
     public Vector3 collidingPoint; // The colliding position
+    public GameObject collidingObject; // The object it is colliding with
 
     // Use this for initialization
     void Start()
@@ -22,6 +25,11 @@ public class DetectCollision : MonoBehaviour
 
     }
 
+    private void OnCollisionEnter(Collision collision)
+    {
+        collidingObject = collision.gameObject;
+    }
+
     private void OnCollisionStay(Collision collision)
     {
         isColliding = true;
@@ -30,6 +38,7 @@ public class DetectCollision : MonoBehaviour
 
     private void OnCollisionExit(Collision collision)
     {
+        collidingObject = null;
         isColliding = false;
     }
 }

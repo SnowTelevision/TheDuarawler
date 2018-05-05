@@ -17,6 +17,7 @@ public class ControlArm : MonoBehaviour
     public LayerMask armCollidingLayer; // The object layers that the arm can collide with
     public LayerMask bodyCollidingLayer; // The object layers that the body can collide with
     public ControlArm otherArm; // The other arm
+    public float triggerThreshold; // How much the trigger has to be pressed down to register
 
     public bool isGrabbingFloor; // If the armTip is grabbing floor
     public float joyStickRotationAngle; // The rotation of the arm
@@ -38,39 +39,23 @@ public class ControlArm : MonoBehaviour
         {
             RotateArm(isLeftArm);
             StretchArm(isLeftArm);
-        }
-        else
-        {
-            armTip.position = bodyRotatingCenter.position;
-        }
+            DetectIfPickingUpItem();
 
-        // If the left armTip start grabbing the floor
-        if (isLeftArm)
-        {
-            if (Input.GetKeyDown(KeyCode.JoystickButton4))
+            if (armTip.GetComponent<ArmUseItem>().currentlyHoldingItem != null)
             {
-                StartGrabbing();
-            }
-            if (Input.GetKeyUp(KeyCode.JoystickButton4))
-            {
-                StopGrabbing();
+                DetectIfDropUnusableItem();
             }
         }
-        // If the right armTip start grabbing the floor
-        if (!isLeftArm)
-        {
-            if (Input.GetKeyDown(KeyCode.JoystickButton5))
-            {
-                StartGrabbing();
-            }
-            if (Input.GetKeyUp(KeyCode.JoystickButton5))
-            {
-                StopGrabbing();
-            }
-        }
-        
+        //else
+        //{
+        //    armTip.position = bodyRotatingCenter.position;
+        //}
+
+        DetectGrabbingFloorInput();
+
         if (isGrabbingFloor)
         {
+            armTip.position = bodyRotatingCenter.position;
             RotateBody();
             MoveBody();
         }
@@ -79,6 +64,157 @@ public class ControlArm : MonoBehaviour
 
         // Test
         //TestControllerInput();
+    }
+
+    /// <summary>
+    /// Detect if the player want to start grabbing the floor with the armTip, and see if can grab or not
+    /// If the armTip is currently holding an usable item, then drop the item first. The player need to press
+    /// the grab button again to start grabbing floor
+    /// </summary>
+    public void DetectGrabbingFloorInput()
+    {
+        if (isLeftArm)
+        {
+            // If the left armTip start grabbing the floor
+            if (Input.GetKeyDown(KeyCode.JoystickButton4))
+            {
+                // If the armTip is currently empty and not holding any item, then start grabbing the ground
+                if (armTip.GetComponent<ArmUseItem>().currentlyHoldingItem == null)
+                {
+                    StartGrabbing();
+                }
+                else // Drop the current holding item (no matter it can be used or not
+                {
+                    DropDownItem();
+                }
+            }
+            if (Input.GetKeyUp(KeyCode.JoystickButton4))
+            {
+                // If the armTip is currently empty and not holding any item, then stop grabbing the ground
+                if (armTip.GetComponent<ArmUseItem>().currentlyHoldingItem == null)
+                {
+                    StopGrabbing();
+                }
+            }
+        }
+
+        if (!isLeftArm)
+        {
+            // If the right armTip start grabbing the floor
+            if (Input.GetKeyDown(KeyCode.JoystickButton5))
+            {
+                // If the armTip is currently empty and not holding any item, then start grabbing the ground
+                if (armTip.GetComponent<ArmUseItem>().currentlyHoldingItem == null)
+                {
+                    StartGrabbing();
+                }
+                else // Drop the current holding item (no matter it can be used or not
+                {
+                    DropDownItem();
+                }
+            }
+            if (Input.GetKeyUp(KeyCode.JoystickButton5))
+            {
+                // If the armTip is currently empty and not holding any item, then stop grabbing the ground
+                if (armTip.GetComponent<ArmUseItem>().currentlyHoldingItem == null)
+                {
+                    StopGrabbing();
+                }
+            }
+        }
+    }
+
+    /// <summary>
+    /// Detect if the armTip is colliding with an item, and if the player want to pick up an item
+    /// </summary>
+    public void DetectIfPickingUpItem()
+    {
+        // If the arm tip is colliding with an item
+        if (armTip.GetComponent<DetectCollision>().collidingObject != null &&
+            armTip.GetComponent<DetectCollision>().collidingObject.GetComponent<ItemInfo>())
+        {
+            // Picking or dropping item
+            // Usable item is click trigger to pick up, click shoulder to drop
+            // Other item is hold down trigger to pick up, release to drop
+
+            if (isLeftArm)
+            {
+                // If the left armTip is not holding an item and the left trigger is pressed down
+                if (armTip.GetComponent<ArmUseItem>().currentlyHoldingItem == null && Input.GetAxis("LeftTrigger") >= triggerThreshold)
+                {
+                    StartCoroutine(PickUpItem());
+                }
+            }
+
+            if (!isLeftArm)
+            {
+                // If the right armTip is not holding an item and the right trigger is pressed down
+                if (armTip.GetComponent<ArmUseItem>().currentlyHoldingItem == null && Input.GetAxis("RightTrigger") >= triggerThreshold)
+                {
+                    StartCoroutine(PickUpItem());
+                }
+            }
+        }
+    }
+
+    /// <summary>
+    /// Detect if the player release the trigger to drop an unusable item
+    /// </summary>
+    public void DetectIfDropUnusableItem()
+    {
+        if (isLeftArm)
+        {
+            // If the left armTip is holding an unusable item and the trigger is lifting up
+            if (!armTip.GetComponent<ArmUseItem>().currentlyHoldingItem.GetComponent<ItemInfo>().canUse &&
+                Input.GetAxis("LeftTrigger") < triggerThreshold)
+            {
+                DropDownItem();
+            }
+
+        }
+
+        if (!isLeftArm)
+        {
+            // If the right armTip is holding an unusable item and the trigger is lifting up
+            if (!armTip.GetComponent<ArmUseItem>().currentlyHoldingItem.GetComponent<ItemInfo>().canUse &&
+                Input.GetAxis("RightTrigger") < triggerThreshold)
+            {
+                DropDownItem();
+            }
+        }
+    }
+
+    /// <summary>
+    /// Start picking up the item
+    /// </summary>
+    public IEnumerator PickUpItem()
+    {
+        // Assign the item that is currently colliding with the armTip to the armTip's current holding item
+        armTip.GetComponent<ArmUseItem>().currentlyHoldingItem = armTip.GetComponent<DetectCollision>().collidingObject;
+
+        // If the other armTip is currently holding the item which is going to be holding by this armTip, then let the other arm drop the item first
+        if (otherArm.armTip.GetComponent<ArmUseItem>().currentlyHoldingItem == armTip.GetComponent<DetectCollision>().collidingObject)
+        {
+            otherArm.DropDownItem();
+        }
+
+        yield return new WaitForEndOfFrame();
+
+        // Add a fixed joint to the holding item to attach it to the armTip
+        armTip.GetComponent<ArmUseItem>().currentlyHoldingItem.gameObject.AddComponent<FixedJoint>();
+        armTip.GetComponent<ArmUseItem>().currentlyHoldingItem.GetComponent<FixedJoint>().connectedBody = armTip.GetComponent<Rigidbody>();
+        armTip.GetComponent<ArmUseItem>().currentlyHoldingItem.GetComponent<FixedJoint>().autoConfigureConnectedAnchor = true;
+    }
+
+    /// <summary>
+    /// Start drop down the item
+    /// </summary>
+    public void DropDownItem()
+    {
+        // Destroy the fixed joint in the item that's currently holding by the armTip
+        Destroy(armTip.GetComponent<ArmUseItem>().currentlyHoldingItem.GetComponent<FixedJoint>());
+        // Remove the dropping item from armTip's currentHoldingItem
+        armTip.GetComponent<ArmUseItem>().currentlyHoldingItem = null;
     }
 
     /// <summary>
@@ -97,11 +233,12 @@ public class ControlArm : MonoBehaviour
         //    rotation = Mathf.Sign(Input.GetAxis("HorizontalLeft")) * (180 - Mathf.Abs(rotation));
         //}
         //print(rotation);
-        print(Mathf.Sqrt(Mathf.Pow(Input.GetAxis("HorizontalLeft"), 2) + Mathf.Pow(Input.GetAxis("VerticalLeft"), 2)));
+        //print(Mathf.Sqrt(Mathf.Pow(Input.GetAxis("HorizontalLeft"), 2) + Mathf.Pow(Input.GetAxis("VerticalLeft"), 2)));
 
         //print(Input.GetKey(KeyCode.JoystickButton4)); // LB
         //print(Input.GetKey(KeyCode.JoystickButton5)); // RB
-        //print(Input.GetAxis("LRT")); // (RT: 0 ~ -1, LT: 0 ~ 1)
+        print("Left: " + Input.GetAxis("LeftTrigger"));
+        print("Right: " + Input.GetAxis("RightTrigger"));
     }
 
     /// <summary>
@@ -193,9 +330,15 @@ public class ControlArm : MonoBehaviour
             // Don't extend if the armTip will go into collider
             if (Physics.Raycast(transform.position, transform.forward, out hit, armMaxLength + armTip.localScale.x / 2f, armCollidingLayer))
             {
-                armTip.localPosition =
-                    //new Vector3(0, 0, hit.distance - armTip.localScale.x / Mathf.Cos(Vector3.Angle(hit.normal, transform.forward) * Mathf.Deg2Rad));
-                    new Vector3(0, 0, hit.distance);
+                // If the ray hits the object that is currently holding by the armTip, then ignore it, don't retract the arm
+                if (armTip.GetComponent<ArmUseItem>().currentlyHoldingItem != null &&
+                    hit.transform != armTip.GetComponent<ArmUseItem>().currentlyHoldingItem.transform &&
+                    hit.transform != arm)
+                {
+                    armTip.localPosition =
+                        //new Vector3(0, 0, hit.distance - armTip.localScale.x / Mathf.Cos(Vector3.Angle(hit.normal, transform.forward) * Mathf.Deg2Rad));
+                        new Vector3(0, 0, hit.distance);
+                }
             }
         }
     }
