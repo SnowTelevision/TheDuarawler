@@ -66,6 +66,11 @@ public class ControlArm : MonoBehaviour
         //TestControllerInput();
     }
 
+    //private void FixedUpdate()
+    //{
+    //    UpdateArmTransform();
+    //}
+
     /// <summary>
     /// Detect if the player want to start grabbing the floor with the armTip, and see if can grab or not
     /// If the armTip is currently holding an usable item, then drop the item first. The player need to press
@@ -85,7 +90,7 @@ public class ControlArm : MonoBehaviour
                 }
                 else // Drop the current holding item (no matter it can be used or not
                 {
-                    DropDownItem();
+                    DropDownItem(armTip.GetComponent<ArmUseItem>().currentlyHoldingItem);
                 }
             }
             if (Input.GetKeyUp(KeyCode.JoystickButton4))
@@ -110,7 +115,7 @@ public class ControlArm : MonoBehaviour
                 }
                 else // Drop the current holding item (no matter it can be used or not
                 {
-                    DropDownItem();
+                    DropDownItem(armTip.GetComponent<ArmUseItem>().currentlyHoldingItem);
                 }
             }
             if (Input.GetKeyUp(KeyCode.JoystickButton5))
@@ -142,7 +147,7 @@ public class ControlArm : MonoBehaviour
                 // If the left armTip is not holding an item and the left trigger is pressed down
                 if (armTip.GetComponent<ArmUseItem>().currentlyHoldingItem == null && Input.GetAxis("LeftTrigger") >= triggerThreshold)
                 {
-                    StartCoroutine(PickUpItem());
+                    StartCoroutine(PickUpItem(armTip.GetComponent<DetectCollision>().collidingObject));
                 }
             }
 
@@ -151,7 +156,7 @@ public class ControlArm : MonoBehaviour
                 // If the right armTip is not holding an item and the right trigger is pressed down
                 if (armTip.GetComponent<ArmUseItem>().currentlyHoldingItem == null && Input.GetAxis("RightTrigger") >= triggerThreshold)
                 {
-                    StartCoroutine(PickUpItem());
+                    StartCoroutine(PickUpItem(armTip.GetComponent<DetectCollision>().collidingObject));
                 }
             }
         }
@@ -168,7 +173,7 @@ public class ControlArm : MonoBehaviour
             if (!armTip.GetComponent<ArmUseItem>().currentlyHoldingItem.GetComponent<ItemInfo>().canUse &&
                 Input.GetAxis("LeftTrigger") < triggerThreshold)
             {
-                DropDownItem();
+                DropDownItem(armTip.GetComponent<ArmUseItem>().currentlyHoldingItem);
             }
 
         }
@@ -179,7 +184,7 @@ public class ControlArm : MonoBehaviour
             if (!armTip.GetComponent<ArmUseItem>().currentlyHoldingItem.GetComponent<ItemInfo>().canUse &&
                 Input.GetAxis("RightTrigger") < triggerThreshold)
             {
-                DropDownItem();
+                DropDownItem(armTip.GetComponent<ArmUseItem>().currentlyHoldingItem);
             }
         }
     }
@@ -187,34 +192,103 @@ public class ControlArm : MonoBehaviour
     /// <summary>
     /// Start picking up the item
     /// </summary>
-    public IEnumerator PickUpItem()
+    /// <param name="pickingItem"></param>
+    /// <returns></returns>
+    public IEnumerator PickUpItem(GameObject pickingItem)
     {
         // Assign the item that is currently colliding with the armTip to the armTip's current holding item
-        armTip.GetComponent<ArmUseItem>().currentlyHoldingItem = armTip.GetComponent<DetectCollision>().collidingObject;
+        armTip.GetComponent<ArmUseItem>().currentlyHoldingItem = pickingItem;
 
         // If the other armTip is currently holding the item which is going to be holding by this armTip, then let the other arm drop the item first
-        if (otherArm.armTip.GetComponent<ArmUseItem>().currentlyHoldingItem == armTip.GetComponent<DetectCollision>().collidingObject)
+        if (otherArm.armTip.GetComponent<ArmUseItem>().currentlyHoldingItem == pickingItem)
         {
-            otherArm.DropDownItem();
+            otherArm.DropDownItem(pickingItem);
         }
 
         yield return new WaitForEndOfFrame();
 
-        // Add a fixed joint to the holding item to attach it to the armTip
-        armTip.GetComponent<ArmUseItem>().currentlyHoldingItem.gameObject.AddComponent<FixedJoint>();
-        armTip.GetComponent<ArmUseItem>().currentlyHoldingItem.GetComponent<FixedJoint>().connectedBody = armTip.GetComponent<Rigidbody>();
-        armTip.GetComponent<ArmUseItem>().currentlyHoldingItem.GetComponent<FixedJoint>().autoConfigureConnectedAnchor = true;
+        // If the item can be lifted by the arm, then disable it's gravity and raise it to the arm's height
+        if (pickingItem.GetComponent<ItemInfo>().smallItem)
+        {
+            //// Turn off the collider
+            //TurnOffColliders(armTip.GetComponent<ArmUseItem>().currentlyHoldingItem);
+            //// Turn off mass, drag, etc.
+            //pickingItem.GetComponent<Rigidbody>().useGravity = false;
+            //pickingItem.GetComponent<Rigidbody>().drag = 0;
+            //pickingItem.GetComponent<Rigidbody>().angularDrag = 0;
+            //pickingItem.GetComponent<Rigidbody>().mass = 0;
+            // Change the item to kinematic
+            pickingItem.GetComponent<Rigidbody>().isKinematic = true;
+            // Raise the item
+            pickingItem.transform.position = armTip.position;
+        }
+        else
+        {
+            // Add a fixed joint to the holding item to attach it to the armTip
+            pickingItem.gameObject.AddComponent<FixedJoint>();
+            pickingItem.GetComponent<FixedJoint>().connectedBody = armTip.GetComponent<Rigidbody>();
+            pickingItem.GetComponent<FixedJoint>().autoConfigureConnectedAnchor = true;
+        }
+
+        pickingItem.GetComponent<ItemInfo>().isBeingHeld = true;
+        pickingItem.GetComponent<ItemInfo>().holdingArm = armTip;
     }
 
     /// <summary>
     /// Start drop down the item
     /// </summary>
-    public void DropDownItem()
+    /// <param name="droppingItem"></param>
+    /// <returns></returns>
+    public void DropDownItem(GameObject droppingItem)
     {
-        // Destroy the fixed joint in the item that's currently holding by the armTip
-        Destroy(armTip.GetComponent<ArmUseItem>().currentlyHoldingItem.GetComponent<FixedJoint>());
+        //// Enable the gravity on the rigidbody of the dropping item
+        //droppingItem.GetComponent<Rigidbody>().useGravity = true;
+        // If the item can be lifted by the arm, then restore the drag, angular drag, and mass of the dropping item
+        if (droppingItem.GetComponent<ItemInfo>().smallItem)
+        {
+            //droppingItem.GetComponent<Rigidbody>().drag = droppingItem.GetComponent<ItemInfo>().normalDrag;
+            //droppingItem.GetComponent<Rigidbody>().angularDrag = droppingItem.GetComponent<ItemInfo>().normalAngularDrag;
+            //droppingItem.GetComponent<Rigidbody>().mass =
+            //droppingItem.GetComponent<ItemInfo>().normalMass;
+            //// Turn on the collider
+            //TurnOnColliders(armTip.GetComponent<ArmUseItem>().currentlyHoldingItem);
+            // Change the item to not kinematic
+            droppingItem.GetComponent<Rigidbody>().isKinematic = false;
+        }
+        else
+        {
+            // Destroy the fixed joint in the item that's currently holding by the armTip
+            Destroy(droppingItem.GetComponent<FixedJoint>());
+        }
+
+        droppingItem.GetComponent<ItemInfo>().isBeingHeld = false;
+        droppingItem.GetComponent<ItemInfo>().holdingArm = null;
         // Remove the dropping item from armTip's currentHoldingItem
         armTip.GetComponent<ArmUseItem>().currentlyHoldingItem = null;
+    }
+
+    /// <summary>
+    /// Turn off colliders in a gameobject
+    /// </summary>
+    /// <param name="g"></param>
+    public void TurnOffColliders(GameObject g)
+    {
+        foreach (Collider c in g.GetComponentsInChildren<Collider>())
+        {
+            c.enabled = false;
+        }
+    }
+
+    /// <summary>
+    /// Turn off colliders in a gameobject
+    /// </summary>
+    /// <param name="g"></param>
+    public void TurnOnColliders(GameObject g)
+    {
+        foreach (Collider c in g.GetComponentsInChildren<Collider>())
+        {
+            c.enabled = true;
+        }
     }
 
     /// <summary>
@@ -288,6 +362,9 @@ public class ControlArm : MonoBehaviour
         arm.localPosition = armTip.localPosition / 2f; // Put the center of the arm in the middle between the armTip and the body center
         //arm.localScale = new Vector3(1, 1, armTip.localPosition.z / 2f); // Extend the arm towards the armTip
         arm.localScale = new Vector3(0.1f, armTip.localPosition.z / 2f, 0.1f); // Extend the arm towards the armTip
+        //armTip.localPosition = Vector3.zero;
+        armTip.GetComponent<Rigidbody>().angularVelocity = Vector3.zero; // Keep the armTip's angular velocity always (0, 0, 0)
+        armTip.localEulerAngles = Vector3.zero; // Keep the armTip's local euler angles always (0, 0, 0)
     }
 
     /// <summary>
@@ -331,10 +408,10 @@ public class ControlArm : MonoBehaviour
             if (Physics.Raycast(transform.position, transform.forward, out hit, armMaxLength + armTip.localScale.x / 2f, armCollidingLayer))
             {
                 // If the ray hits the object that is currently holding by the armTip, then ignore it, don't retract the arm
-                if (armTip.GetComponent<ArmUseItem>().currentlyHoldingItem != null &&
-                    hit.transform != armTip.GetComponent<ArmUseItem>().currentlyHoldingItem.transform &&
-                    hit.transform != arm)
+                if (armTip.GetComponent<ArmUseItem>().currentlyHoldingItem == null ||
+                    hit.transform != armTip.GetComponent<ArmUseItem>().currentlyHoldingItem.transform)
                 {
+                    print(hit.transform.name);
                     armTip.localPosition =
                         //new Vector3(0, 0, hit.distance - armTip.localScale.x / Mathf.Cos(Vector3.Angle(hit.normal, transform.forward) * Mathf.Deg2Rad));
                         new Vector3(0, 0, hit.distance);
