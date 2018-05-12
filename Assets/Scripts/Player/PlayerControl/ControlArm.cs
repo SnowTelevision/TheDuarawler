@@ -411,7 +411,7 @@ public class ControlArm : MonoBehaviour
                 if (armTip.GetComponent<ArmUseItem>().currentlyHoldingItem == null ||
                     hit.transform != armTip.GetComponent<ArmUseItem>().currentlyHoldingItem.transform)
                 {
-                    print(hit.transform.name);
+                    //print(hit.transform.name);
                     armTip.localPosition =
                         //new Vector3(0, 0, hit.distance - armTip.localScale.x / Mathf.Cos(Vector3.Angle(hit.normal, transform.forward) * Mathf.Deg2Rad));
                         new Vector3(0, 0, hit.distance);
