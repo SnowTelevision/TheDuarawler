@@ -25,6 +25,11 @@ public class DetectCollision : MonoBehaviour
 
     }
 
+    private void FixedUpdate()
+    {
+        isColliding = false;
+    }
+
     private void OnCollisionEnter(Collision collision)
     {
         collidingObject = collision.gameObject;

@@ -18,6 +18,8 @@ public class ControlArm : MonoBehaviour
     public LayerMask bodyCollidingLayer; // The object layers that the body can collide with
     public ControlArm otherArm; // The other arm
     public float triggerThreshold; // How much the trigger has to be pressed down to register
+    public float armLiftingStrength; // How much weight the arm can lift? (The currently holding item's weight)
+    public float armHoldingJointBreakForce; // How much force the fixed joint between the armTip and the currently holding item can bearing before break
 
     public bool isGrabbingFloor; // If the armTip is grabbing floor
     public float joyStickRotationAngle; // The rotation of the arm
@@ -208,7 +210,7 @@ public class ControlArm : MonoBehaviour
         yield return new WaitForEndOfFrame();
 
         // If the item can be lifted by the arm, then disable it's gravity and raise it to the arm's height
-        if (pickingItem.GetComponent<ItemInfo>().smallItem)
+        if (pickingItem.GetComponent<ItemInfo>().itemWeight <= armLiftingStrength)
         {
             //// Turn off the collider
             //TurnOffColliders(armTip.GetComponent<ArmUseItem>().currentlyHoldingItem);
@@ -228,6 +230,7 @@ public class ControlArm : MonoBehaviour
             pickingItem.gameObject.AddComponent<FixedJoint>();
             pickingItem.GetComponent<FixedJoint>().connectedBody = armTip.GetComponent<Rigidbody>();
             pickingItem.GetComponent<FixedJoint>().autoConfigureConnectedAnchor = true;
+            pickingItem.GetComponent<FixedJoint>().breakForce = armHoldingJointBreakForce;
         }
 
         pickingItem.GetComponent<ItemInfo>().isBeingHeld = true;
@@ -244,7 +247,7 @@ public class ControlArm : MonoBehaviour
         //// Enable the gravity on the rigidbody of the dropping item
         //droppingItem.GetComponent<Rigidbody>().useGravity = true;
         // If the item can be lifted by the arm, then restore the drag, angular drag, and mass of the dropping item
-        if (droppingItem.GetComponent<ItemInfo>().smallItem)
+        if (droppingItem.GetComponent<ItemInfo>().itemWeight <= armLiftingStrength)
         {
             //droppingItem.GetComponent<Rigidbody>().drag = droppingItem.GetComponent<ItemInfo>().normalDrag;
             //droppingItem.GetComponent<Rigidbody>().angularDrag = droppingItem.GetComponent<ItemInfo>().normalAngularDrag;
@@ -400,22 +403,39 @@ public class ControlArm : MonoBehaviour
         // Calculate how long the arm extends
         armTip.localPosition = new Vector3(0, 0, joyStickLength * armMaxLength);
 
-        if (arm.GetComponentInChildren<DetectCollision>().isColliding)
-        //if (armTip.GetComponent<DetectCollision>().isColliding)
+        //// If the armTip collide on something
+        //if (arm.GetComponentInChildren<DetectCollision>().isColliding)
+        ////if (armTip.GetComponent<DetectCollision>().isColliding)
+        //{
+        //    RaycastHit hit;
+        //    // Don't extend if the armTip will go into collider
+        //    if (Physics.Raycast(transform.position, transform.forward, out hit, armMaxLength + armTip.localScale.x / 2f, armCollidingLayer))
+        //    {
+        //        // If the ray hits the object that is currently holding by the armTip, then ignore it, don't retract the arm
+        //        if (armTip.GetComponent<ArmUseItem>().currentlyHoldingItem == null ||
+        //            hit.transform != armTip.GetComponent<ArmUseItem>().currentlyHoldingItem.transform)
+        //        {
+        //            //print(hit.transform.name);
+        //            armTip.localPosition =
+        //                //new Vector3(0, 0, hit.distance - armTip.localScale.x / Mathf.Cos(Vector3.Angle(hit.normal, transform.forward) * Mathf.Deg2Rad));
+        //                new Vector3(0, 0, hit.distance);
+        //        }
+        //    }
+        //}
+
+        // If the arm will collide on something within the current stretching length
+        RaycastHit hit;
+        // Don't extend if the armTip will go into collider
+        if (Physics.Raycast(transform.position, transform.forward, out hit, joyStickLength * armMaxLength + armTip.localScale.x / 2f, armCollidingLayer))
         {
-            RaycastHit hit;
-            // Don't extend if the armTip will go into collider
-            if (Physics.Raycast(transform.position, transform.forward, out hit, armMaxLength + armTip.localScale.x / 2f, armCollidingLayer))
+            // If the ray hits the object that is currently holding by the armTip, then ignore it, don't retract the arm
+            if (armTip.GetComponent<ArmUseItem>().currentlyHoldingItem == null ||
+                hit.transform != armTip.GetComponent<ArmUseItem>().currentlyHoldingItem.transform)
             {
-                // If the ray hits the object that is currently holding by the armTip, then ignore it, don't retract the arm
-                if (armTip.GetComponent<ArmUseItem>().currentlyHoldingItem == null ||
-                    hit.transform != armTip.GetComponent<ArmUseItem>().currentlyHoldingItem.transform)
-                {
-                    //print(hit.transform.name);
-                    armTip.localPosition =
-                        //new Vector3(0, 0, hit.distance - armTip.localScale.x / Mathf.Cos(Vector3.Angle(hit.normal, transform.forward) * Mathf.Deg2Rad));
-                        new Vector3(0, 0, hit.distance);
-                }
+                //print(hit.transform.name);
+                armTip.localPosition =
+                    //new Vector3(0, 0, hit.distance - armTip.localScale.x / Mathf.Cos(Vector3.Angle(hit.normal, transform.forward) * Mathf.Deg2Rad));
+                    new Vector3(0, 0, hit.distance);
             }
         }
     }
@@ -465,15 +485,22 @@ public class ControlArm : MonoBehaviour
     {
         body.localPosition = new Vector3(0, 0, joyStickLength * armMaxLength);
 
-        if (bodyWallDetector.isColliding)
+        //if (bodyWallDetector.isColliding)
+        //{
+        //    Debug.DrawLine(bodyRotatingCenter.position, bodyWallDetector.collidingPoint, Color.red);
+        //    body.localPosition =
+        //        new Vector3(0, 0, Vector3.Distance(bodyRotatingCenter.position, bodyWallDetector.collidingPoint));
+        //    //body.position = bodyWallDetector.collidingPoint;
+        //}
+
+        // Don't extend if the armTip will go into collider
+        RaycastHit hit;
+        if (Physics.Raycast(bodyRotatingCenter.position, bodyRotatingCenter.forward, out hit, joyStickLength * armMaxLength + body.localScale.x, bodyCollidingLayer))
         {
-            RaycastHit hit;
-            // Don't extend if the armTip will go into collider
-            if (Physics.Raycast(bodyRotatingCenter.position, bodyRotatingCenter.forward, out hit, armMaxLength + body.localScale.x, bodyCollidingLayer))
-            {
-                body.localPosition =
-                    new Vector3(0, 0, hit.distance - body.localScale.x / 2f / Mathf.Cos(Vector3.Angle(hit.normal, transform.forward) * Mathf.Deg2Rad));
-            }
+            print("Angle: " + Vector3.Angle(hit.normal, transform.forward) + ", Cos: " + Mathf.Cos(Vector3.Angle(hit.normal, transform.forward) * Mathf.Deg2Rad));
+            //Debug.DrawLine(bodyRotatingCenter.position, hit.point, Color.red);
+            body.localPosition =
+                new Vector3(0, 0, hit.distance - body.localScale.x / 2f / Mathf.Cos(Vector3.Angle(hit.normal, transform.forward) * Mathf.Deg2Rad));
         }
     }
 
