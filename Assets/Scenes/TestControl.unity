@@ -760,6 +760,8 @@ MonoBehaviour:
   requirePass: 0
   passcode: 0
   openLeft: 1
+  doorKeepOpenDuration: 0
+  lastKeyPassEnterTime: 0
 --- !u!4 &344295824
 Transform:
   m_ObjectHideFlags: 0
@@ -1447,6 +1449,8 @@ MonoBehaviour:
   requirePass: 0
   passcode: 0
   openLeft: 1
+  doorKeepOpenDuration: 3
+  lastKeyPassEnterTime: 0
 --- !u!4 &848221237
 Transform:
   m_ObjectHideFlags: 0
