@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
 
 /// <summary>
 /// Controls the basic movement of the player arms
@@ -200,6 +201,15 @@ public class ControlArm : MonoBehaviour
     {
         // Assign the item that is currently colliding with the armTip to the armTip's current holding item
         armTip.GetComponent<ArmUseItem>().currentlyHoldingItem = pickingItem;
+        // Prevent the player from using the item right when they pick up that item
+        armTip.GetComponent<ArmUseItem>().hasTriggerReleased = false;
+        // Assign the start and stop using item function to the UnityEvents
+        UnityAction startUsingAction = System.Delegate.CreateDelegate(typeof(UnityAction), pickingItem.GetComponent<ItemInfo>(), "StartUsing") as UnityAction;
+        UnityEditor.Events.UnityEventTools.AddPersistentListener(armTip.GetComponent<ArmUseItem>().useItem, startUsingAction);
+        //armTip.GetComponent<ArmUseItem>().useItem.AddListener(pickingItem.GetComponent<ItemInfo>().StartUsing);
+        UnityAction stopUsingAction = System.Delegate.CreateDelegate(typeof(UnityAction), pickingItem.GetComponent<ItemInfo>(), "StopUsing") as UnityAction;
+        UnityEditor.Events.UnityEventTools.AddPersistentListener(armTip.GetComponent<ArmUseItem>().stopUsingItem, stopUsingAction);
+        //armTip.GetComponent<ArmUseItem>().stopUsingItem.AddListener(pickingItem.GetComponent<ItemInfo>().StopUsing);
 
         // If the other armTip is currently holding the item which is going to be holding by this armTip, then let the other arm drop the item first
         if (otherArm.armTip.GetComponent<ArmUseItem>().currentlyHoldingItem == pickingItem)
@@ -244,6 +254,14 @@ public class ControlArm : MonoBehaviour
     /// <returns></returns>
     public void DropDownItem(GameObject droppingItem)
     {
+        // Remove the start and stop using item function from the UnityEvents
+        //armTip.GetComponent<ArmUseItem>().useItem.RemoveAllListeners();
+        //armTip.GetComponent<ArmUseItem>().stopUsingItem.RemoveAllListeners();
+        UnityAction startUsingAction = System.Delegate.CreateDelegate(typeof(UnityAction), droppingItem.GetComponent<ItemInfo>(), "StartUsing") as UnityAction;
+        UnityEditor.Events.UnityEventTools.RemovePersistentListener(armTip.GetComponent<ArmUseItem>().useItem, startUsingAction);
+        UnityAction stopUsingAction = System.Delegate.CreateDelegate(typeof(UnityAction), droppingItem.GetComponent<ItemInfo>(), "StopUsing") as UnityAction;
+        UnityEditor.Events.UnityEventTools.RemovePersistentListener(armTip.GetComponent<ArmUseItem>().stopUsingItem, stopUsingAction);
+
         //// Enable the gravity on the rigidbody of the dropping item
         //droppingItem.GetComponent<Rigidbody>().useGravity = true;
         // If the item can be lifted by the arm, then restore the drag, angular drag, and mass of the dropping item
@@ -261,7 +279,10 @@ public class ControlArm : MonoBehaviour
         else
         {
             // Destroy the fixed joint in the item that's currently holding by the armTip
-            Destroy(droppingItem.GetComponent<FixedJoint>());
+            if (droppingItem.GetComponent<FixedJoint>())
+            {
+                Destroy(droppingItem.GetComponent<FixedJoint>());
+            }
         }
 
         droppingItem.GetComponent<ItemInfo>().isBeingHeld = false;
@@ -402,6 +423,7 @@ public class ControlArm : MonoBehaviour
 
         // Calculate how long the arm extends
         armTip.localPosition = new Vector3(0, 0, joyStickLength * armMaxLength);
+        //armTip.GetComponent<Rigidbody>().MovePosition(transform.TransformPoint(new Vector3(0, 0, joyStickLength * armMaxLength)));
 
         //// If the armTip collide on something
         //if (arm.GetComponentInChildren<DetectCollision>().isColliding)
@@ -493,14 +515,15 @@ public class ControlArm : MonoBehaviour
         //    //body.position = bodyWallDetector.collidingPoint;
         //}
 
+        Debug.DrawLine(bodyRotatingCenter.position, bodyRotatingCenter.position + bodyRotatingCenter.forward * (joyStickLength * armMaxLength + body.localScale.x), Color.green);
         // Don't extend if the armTip will go into collider
         RaycastHit hit;
-        if (Physics.Raycast(bodyRotatingCenter.position, bodyRotatingCenter.forward, out hit, joyStickLength * armMaxLength + body.localScale.x, bodyCollidingLayer))
+        if (Physics.Raycast(bodyRotatingCenter.position, bodyRotatingCenter.forward, out hit, joyStickLength * armMaxLength + 0 * body.localScale.x, bodyCollidingLayer))
         {
-            print("Angle: " + Vector3.Angle(hit.normal, transform.forward) + ", Cos: " + Mathf.Cos(Vector3.Angle(hit.normal, transform.forward) * Mathf.Deg2Rad));
-            //Debug.DrawLine(bodyRotatingCenter.position, hit.point, Color.red);
+            //print("Angle: " + Vector3.Angle(hit.normal, transform.forward) + ", Cos: " + Mathf.Cos(Vector3.Angle(hit.normal, transform.forward) * Mathf.Deg2Rad));
+            Debug.DrawLine(bodyRotatingCenter.position, hit.point, Color.red);
             body.localPosition =
-                new Vector3(0, 0, hit.distance - body.localScale.x / 2f / Mathf.Cos(Vector3.Angle(hit.normal, transform.forward) * Mathf.Deg2Rad));
+                new Vector3(0, 0, hit.distance);// - body.localScale.x / 2f / Mathf.Cos(Vector3.Angle(hit.normal, transform.forward) * Mathf.Deg2Rad));
         }
     }
 
