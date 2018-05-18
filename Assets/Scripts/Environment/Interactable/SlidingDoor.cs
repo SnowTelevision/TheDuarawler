@@ -4,6 +4,7 @@ using UnityEngine;
 
 /// <summary>
 /// Controls a sliding door
+/// All door should have its local forward pointing into the room
 /// </summary>
 public class SlidingDoor : MonoBehaviour
 {
@@ -22,7 +23,8 @@ public class SlidingDoor : MonoBehaviour
     // Use this for initialization
     void Start()
     {
-        if (openLeft)
+        // Rotate the door if the door is open to the right
+        if (!openLeft)
         {
             transform.eulerAngles = transform.eulerAngles + new Vector3(0, 180, 0);
         }
@@ -84,7 +86,6 @@ public class SlidingDoor : MonoBehaviour
                 if (other.GetComponent<KeyInfo>().keyCode == keyCode)
                 {
                     openDoor = true;
-                    lastKeyPassEnterTime = Time.time;
                 }
             }
         }
@@ -104,12 +105,7 @@ public class SlidingDoor : MonoBehaviour
 
         if (openDoor)
         {
-            if (controlDoorAnimationCoroutine != null)
-            {
-                StopCoroutine(controlDoorAnimationCoroutine);
-            }
-
-            controlDoorAnimationCoroutine = StartCoroutine(GetComponentsInChildren<LinearObjectMovement>()[0].Animate());
+            OpenDoor();
         }
     }
 
@@ -129,6 +125,29 @@ public class SlidingDoor : MonoBehaviour
         //    // Add the key back to the touching key list
         //    touchingKeys.Add(other.GetComponent<KeyInfo>());
         //}
+        // If this door needs a key to open and a key touching it is just picked up by someone and the door is closed
+        if (requireKey &&
+            Time.time - lastKeyPassEnterTime >= doorKeepOpenDuration && 
+            other.GetComponent<KeyInfo>() &&
+            other.GetComponent<KeyInfo>().keyCode == keyCode &&
+            other.GetComponent<ItemInfo>().isBeingHeld)
+        {
+            //bool openDoor = true;
+
+            //// If the door is currently opening and closing
+            //foreach(LinearObjectMovement l in GetComponentsInChildren<LinearObjectMovement>())
+            //{
+            //    if (l.isAnimationRunning)
+            //    {
+            //        openDoor = false;
+            //    }
+            //}
+
+            //if (openDoor)
+            {
+                OpenDoor();
+            }
+        }
     }
 
     private void OnTriggerExit(Collider other)
@@ -171,13 +190,35 @@ public class SlidingDoor : MonoBehaviour
 
         if (closeDoor)
         {
-            if (controlDoorAnimationCoroutine != null)
-            {
-                StopCoroutine(controlDoorAnimationCoroutine);
-            }
-
-            controlDoorAnimationCoroutine = StartCoroutine(GetComponentsInChildren<LinearObjectMovement>()[1].Animate());
+            CloseDoor();
         }
+    }
+
+    /// <summary>
+    /// Open the door
+    /// </summary>
+    public void OpenDoor()
+    {
+        if (controlDoorAnimationCoroutine != null)
+        {
+            StopCoroutine(controlDoorAnimationCoroutine);
+        }
+
+        lastKeyPassEnterTime = Time.time;
+        controlDoorAnimationCoroutine = StartCoroutine(GetComponentsInChildren<LinearObjectMovement>()[0].Animate());
+    }
+
+    /// <summary>
+    /// Close the door
+    /// </summary>
+    public void CloseDoor()
+    {
+        if (controlDoorAnimationCoroutine != null)
+        {
+            StopCoroutine(controlDoorAnimationCoroutine);
+        }
+
+        controlDoorAnimationCoroutine = StartCoroutine(GetComponentsInChildren<LinearObjectMovement>()[1].Animate());
     }
 
     ///// <summary>

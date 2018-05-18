@@ -21,6 +21,7 @@ public class ControlArm : MonoBehaviour
     public float triggerThreshold; // How much the trigger has to be pressed down to register
     public float armLiftingStrength; // How much weight the arm can lift? (The currently holding item's weight)
     public float armHoldingJointBreakForce; // How much force the fixed joint between the armTip and the currently holding item can bearing before break
+    public float collisionRaycastOriginSetBackDistance; // How far should the raycast's origin move back from the pivot center when detecting collision of armTip/body
 
     public bool isGrabbingFloor; // If the armTip is grabbing floor
     public float joyStickRotationAngle; // The rotation of the arm
@@ -448,7 +449,8 @@ public class ControlArm : MonoBehaviour
         // If the arm will collide on something within the current stretching length
         RaycastHit hit;
         // Don't extend if the armTip will go into collider
-        if (Physics.Raycast(transform.position, transform.forward, out hit, joyStickLength * armMaxLength + armTip.localScale.x / 2f, armCollidingLayer))
+        if (Physics.Raycast(transform.position - transform.forward * collisionRaycastOriginSetBackDistance, transform.forward, 
+            out hit, joyStickLength * armMaxLength + collisionRaycastOriginSetBackDistance + armTip.localScale.x / 2f, armCollidingLayer))
         {
             // If the ray hits the object that is currently holding by the armTip, then ignore it, don't retract the arm
             if (armTip.GetComponent<ArmUseItem>().currentlyHoldingItem == null ||
@@ -457,7 +459,7 @@ public class ControlArm : MonoBehaviour
                 //print(hit.transform.name);
                 armTip.localPosition =
                     //new Vector3(0, 0, hit.distance - armTip.localScale.x / Mathf.Cos(Vector3.Angle(hit.normal, transform.forward) * Mathf.Deg2Rad));
-                    new Vector3(0, 0, hit.distance);
+                    new Vector3(0, 0, hit.distance - collisionRaycastOriginSetBackDistance);
             }
         }
     }
@@ -518,12 +520,13 @@ public class ControlArm : MonoBehaviour
         Debug.DrawLine(bodyRotatingCenter.position, bodyRotatingCenter.position + bodyRotatingCenter.forward * (joyStickLength * armMaxLength + body.localScale.x), Color.green);
         // Don't extend if the armTip will go into collider
         RaycastHit hit;
-        if (Physics.Raycast(bodyRotatingCenter.position, bodyRotatingCenter.forward, out hit, joyStickLength * armMaxLength + 0 * body.localScale.x, bodyCollidingLayer))
+        if (Physics.Raycast(bodyRotatingCenter.position - bodyRotatingCenter.forward * collisionRaycastOriginSetBackDistance, bodyRotatingCenter.forward, 
+            out hit, joyStickLength * armMaxLength + collisionRaycastOriginSetBackDistance + 0 * body.localScale.x, bodyCollidingLayer))
         {
             //print("Angle: " + Vector3.Angle(hit.normal, transform.forward) + ", Cos: " + Mathf.Cos(Vector3.Angle(hit.normal, transform.forward) * Mathf.Deg2Rad));
             Debug.DrawLine(bodyRotatingCenter.position, hit.point, Color.red);
             body.localPosition =
-                new Vector3(0, 0, hit.distance);// - body.localScale.x / 2f / Mathf.Cos(Vector3.Angle(hit.normal, transform.forward) * Mathf.Deg2Rad));
+                new Vector3(0, 0, hit.distance - collisionRaycastOriginSetBackDistance);// - body.localScale.x / 2f / Mathf.Cos(Vector3.Angle(hit.normal, transform.forward) * Mathf.Deg2Rad));
         }
     }
 

@@ -15,6 +15,7 @@ public class LinearObjectMovement : MonoBehaviour
     public bool animationFinished; // Is the animation finished
     public bool pause; // Is the animation paused
     public float endDistanceTolerance; // How close the object has to be with the target position for the segment to finish
+    public bool isAnimationRunning; // Is a segment of the animation sequence currently running
 
     // Testing
     public bool testing; // Is this been tested
@@ -26,6 +27,7 @@ public class LinearObjectMovement : MonoBehaviour
         pause = false;
         // Testing purpose
         //StartCoroutine(Animate());
+        isAnimationRunning = false;
     }
 
     // Testing
@@ -97,9 +99,11 @@ public class LinearObjectMovement : MonoBehaviour
             {
                 while (pause) // Pause the animation
                 {
+                    isAnimationRunning = false;
                     yield return null;
                 }
 
+                isAnimationRunning = true;
                 newPosition = objectToBeAnimated.transform.localPosition + movementVector * Time.deltaTime;
                 objectToBeAnimated.transform.localPosition = newPosition;
                 whileStopper++;
@@ -107,6 +111,7 @@ public class LinearObjectMovement : MonoBehaviour
             }
 
             objectToBeAnimated.transform.localPosition = animationSequence[i].targetLocalPosition;
+            isAnimationRunning = false;
 
             // If the animation is loopable then restore its start and target position to its initial values set in the inspector
             if (loopable)
