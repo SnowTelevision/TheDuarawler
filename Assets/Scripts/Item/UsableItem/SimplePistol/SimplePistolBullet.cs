@@ -7,6 +7,8 @@ using UnityEngine;
 /// </summary>
 public class SimplePistolBullet : MonoBehaviour
 {
+
+
     public SimplePistol owner; // The pistol that shot it
 
     // Use this for initialization
@@ -23,7 +25,7 @@ public class SimplePistolBullet : MonoBehaviour
 
     private void OnTriggerExit(Collider other)
     {
-        if(other.GetComponent<SimplePistol>())
+        if (other.GetComponent<SimplePistol>())
         {
             GetComponent<Collider>().enabled = true;
         }

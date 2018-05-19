@@ -8,6 +8,7 @@ using UnityEngine;
 public class DemoScientistBehavior : MonoBehaviour
 {
     public GameObject key; // The door key
+    public GameObject tutorialPickUp; // The tutorial that teaches pick up item
 
     // Use this for initialization
     void Start()
@@ -28,17 +29,31 @@ public class DemoScientistBehavior : MonoBehaviour
             key.GetComponent<ItemInfo>().isBeingHeld = false;
             key.GetComponent<Rigidbody>().isKinematic = false;
             key.transform.parent = null;
+            transform.LookAt(GameManager.sPlayer.transform, Vector3.up);
         }
 
-        //
+        // Turn back and run away
         if (transform.position.z > 10 &&
             key.transform.parent == null &&
             GetComponent<LinearObjectMovement>().isAnimationRunning)
         {
-            transform.eulerAngles += new Vector3(0, 180, 0);
+            transform.eulerAngles = Vector3.zero;
             GetComponentInChildren<Actions>().Run();
-            Destroy(gameObject, 10);
+            Destroy(gameObject, 8);
             this.enabled = false;
         }
+    }
+
+    private void OnBecameVisible()
+    {
+        //print("In camera");
+        GameManager.ScriptedEventStart();
+    }
+
+    private void OnBecameInvisible()
+    {
+        //print("Out camera");
+        GameManager.ScriptedEventStop();
+        tutorialPickUp.SetActive(true);
     }
 }

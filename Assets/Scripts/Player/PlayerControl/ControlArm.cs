@@ -36,6 +36,24 @@ public class ControlArm : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        // Don't let the player control the character if the game is in a scripted event
+        if (GameManager.inScriptedEvent)
+        {
+            // Make sure the armTip doesn't "roll away"
+            if (!armTip.GetComponent<Rigidbody>().isKinematic)
+            {
+                armTip.GetComponent<Rigidbody>().isKinematic = true;
+            }
+            return;
+        }
+        else
+        {
+            if (armTip.GetComponent<Rigidbody>().isKinematic)
+            {
+                armTip.GetComponent<Rigidbody>().isKinematic = false;
+            }
+        }
+
         CalculateJoyStickRotation(isLeftArm);
         CalculateJoyStickLength(isLeftArm);
 
@@ -449,7 +467,7 @@ public class ControlArm : MonoBehaviour
         // If the arm will collide on something within the current stretching length
         RaycastHit hit;
         // Don't extend if the armTip will go into collider
-        if (Physics.Raycast(transform.position - transform.forward * collisionRaycastOriginSetBackDistance, transform.forward, 
+        if (Physics.Raycast(transform.position - transform.forward * collisionRaycastOriginSetBackDistance, transform.forward,
             out hit, joyStickLength * armMaxLength + collisionRaycastOriginSetBackDistance + armTip.localScale.x / 2f, armCollidingLayer))
         {
             // If the ray hits the object that is currently holding by the armTip, then ignore it, don't retract the arm
@@ -520,7 +538,7 @@ public class ControlArm : MonoBehaviour
         Debug.DrawLine(bodyRotatingCenter.position, bodyRotatingCenter.position + bodyRotatingCenter.forward * (joyStickLength * armMaxLength + body.localScale.x), Color.green);
         // Don't extend if the armTip will go into collider
         RaycastHit hit;
-        if (Physics.Raycast(bodyRotatingCenter.position - bodyRotatingCenter.forward * collisionRaycastOriginSetBackDistance, bodyRotatingCenter.forward, 
+        if (Physics.Raycast(bodyRotatingCenter.position - bodyRotatingCenter.forward * collisionRaycastOriginSetBackDistance, bodyRotatingCenter.forward,
             out hit, joyStickLength * armMaxLength + collisionRaycastOriginSetBackDistance + 0 * body.localScale.x, bodyCollidingLayer))
         {
             //print("Angle: " + Vector3.Angle(hit.normal, transform.forward) + ", Cos: " + Mathf.Cos(Vector3.Angle(hit.normal, transform.forward) * Mathf.Deg2Rad));

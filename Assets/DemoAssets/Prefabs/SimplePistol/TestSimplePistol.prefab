@@ -39,7 +39,7 @@ Transform:
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1813304664216506}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0.5}
   m_LocalScale: {x: 0.5, y: 0.5, z: 0.5}
   m_Children: []
   m_Father: {fileID: 0}
@@ -60,7 +60,7 @@ MeshRenderer:
   m_ReflectionProbeUsage: 1
   m_RenderingLayerMask: 4294967295
   m_Materials:
-  - {fileID: 2100000, guid: 7693321b24e126a44bf468c384ae899b, type: 2}
+  - {fileID: 2100000, guid: 209706bbcbdd8f84ab40a20e99cc3516, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -127,7 +127,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   pistolBullet: {fileID: 1308790853017890, guid: adc076a8e0659a7499f33e2042179881,
     type: 2}
-  pistolInitialVelocity: 10
+  pistolInitialVelocity: 30
   pistolBulletLifeSpawn: 3
 --- !u!114 &114581688204296922
 MonoBehaviour:

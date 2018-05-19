@@ -46,4 +46,43 @@ public class DetectCollision : MonoBehaviour
         collidingObject = null;
         isColliding = false;
     }
+
+    private void OnTriggerEnter(Collider other)
+    {
+        if (other.GetComponent<ItemInfo>())
+        {
+            return;
+        }
+        collidingObject = other.gameObject;
+    }
+
+    private void OnTriggerStay(Collider other)
+    {
+        if (other.GetComponent<ItemInfo>())
+        {
+            return;
+        }
+        isColliding = true;
+    }
+
+    private void OnTriggerExit(Collider other)
+    {
+        if (other.GetComponent<ItemInfo>())
+        {
+            return;
+        }
+        collidingObject = null;
+        isColliding = false;
+    }
+
+    /// <summary>
+    /// Determine if the collider or trigger should be detected
+    /// </summary>
+    public void VerifyCollision(GameObject other)
+    {
+        if (other.GetComponent<TriggerDetectStartEvent>())
+        {
+            return;
+        }
+    }
 }

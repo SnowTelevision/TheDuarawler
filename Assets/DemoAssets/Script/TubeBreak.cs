@@ -8,6 +8,8 @@ using UnityEngine;
 public class TubeBreak : MonoBehaviour
 {
     public int hitToBreak; // The number of hit to break the tube
+    public GameObject tutorialTextTriggerBeforeBreak; // The tutorial text to show before the tube breaks
+    public GameObject tutorialTextTriggerAfterBreak; // The tutorial text to show after the tube breaks
 
     public int timeWasHit; // How many hit has the tube received
     public GameObject lastCollidedArmTip; // The last armTip that hit the tube
@@ -23,6 +25,8 @@ public class TubeBreak : MonoBehaviour
     {
         if (timeWasHit == hitToBreak)
         {
+            Destroy(tutorialTextTriggerBeforeBreak);
+            tutorialTextTriggerAfterBreak.SetActive(true);
             Destroy(transform.parent.gameObject);
         }
     }

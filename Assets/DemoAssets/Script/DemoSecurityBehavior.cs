@@ -7,24 +7,88 @@ using UnityEngine;
 /// </summary>
 public class DemoSecurityBehavior : MonoBehaviour
 {
+    public GameObject pistol; // The pistol held by the security
+    public GameObject tutorialPickUpAndUse; // The tutorial that teaches pick up item and use it
+
+    public Quaternion initialRotation; // The initial rotation of the security
 
     // Use this for initialization
     void Start()
     {
-
+        initialRotation = transform.rotation;
     }
 
     // Update is called once per frame
     void Update()
     {
+        // Look at the player if it detects the player
+        if (pistol.GetComponent<ItemInfo>().usingItem != null)
+        {
+            transform.LookAt(GameManager.sPlayer.transform, Vector3.up);
+        }
+        else
+        {
+            transform.rotation = initialRotation;
+        }
+    }
 
+    ///// <summary>
+    ///// Start to shoot pistol at player
+    ///// </summary>
+    //public void StartShootPlayer()
+    //{
+
+    //}
+
+    private void OnCollisionEnter(Collision collision)
+    {
+        // Prevent it shot by its own bullet
+        if (collision.collider.GetComponent<SimplePistolBullet>() &&
+            collision.collider.GetComponent<SimplePistolBullet>().owner == pistol.GetComponent<SimplePistol>())
+        {
+            return;
+        }
+
+        // If it is hit
+        if (collision.collider.name == "SimplePistolBulletWarp(Clone)" ||
+            collision.collider.name == "BatWrap")
+        {
+            SecurityDie();
+        }
+    }
+
+    private void OnTriggerEnter(Collider other)
+    {
+        //print(this.name);
+
+        // Prevent it shot by its own bullet
+        if (other.GetComponent<SimplePistolBullet>() &&
+            other.GetComponent<SimplePistolBullet>().owner == pistol.GetComponent<SimplePistol>())
+        {
+            return;
+        }
+
+        // If it is hit
+        if (other.name == "SimplePistolBulletWarp(Clone)" ||
+            other.name == "BatWrap")
+        {
+            SecurityDie();
+        }
     }
 
     /// <summary>
-    /// Start to shoot pistol at player
+    /// What happens when the security dead
     /// </summary>
-    public void StartShootPlayer()
+    public void SecurityDie()
     {
+        if (tutorialPickUpAndUse != null)
+        {
+            tutorialPickUpAndUse.SetActive(true);
+        }
 
+        pistol.GetComponent<ItemInfo>().eventCoolDown = Mathf.Infinity;
+        pistol.GetComponent<Rigidbody>().isKinematic = false;
+        pistol.transform.parent = null;
+        Destroy(gameObject);
     }
 }

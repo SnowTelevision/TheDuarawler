@@ -31,28 +31,49 @@ public class TriggerDetectStartEvent : MonoBehaviour
         // If this trigger check against layer and the collider's layer matches
         if (detectLayer != "" && other.gameObject.layer == LayerMask.NameToLayer(detectLayer))
         {
-            TriggerEvents();
+            TriggerEvents(false);
         }
         // If this trigger check against name and the collider's name matches
         else if (detectName != "" && other.name == detectName)
         {
-            TriggerEvents();
+            TriggerEvents(false);
         }
         // If this trigger check against gameObject and the collider's gameObject matches
         else if (detectGameObject != null && other.gameObject == detectGameObject)
         {
-            TriggerEvents();
+            TriggerEvents(false);
+        }
+    }
+
+    private void OnTriggerExit(Collider other)
+    {
+        // If this trigger check against layer and the collider's layer matches
+        if (detectLayer != "" && other.gameObject.layer == LayerMask.NameToLayer(detectLayer))
+        {
+            TriggerEvents(true);
+        }
+        // If this trigger check against name and the collider's name matches
+        else if (detectName != "" && other.name == detectName)
+        {
+            TriggerEvents(true);
+        }
+        // If this trigger check against gameObject and the collider's gameObject matches
+        else if (detectGameObject != null && other.gameObject == detectGameObject)
+        {
+            TriggerEvents(true);
         }
     }
 
     /// <summary>
     /// Trigger events if they can still be triggered
     /// </summary>
-    public void TriggerEvents()
+    /// <param name="triggerOnExit"></param>
+    public void TriggerEvents(bool triggerOnExit)
     {
         foreach (EventInfo e in eventsToBeTriggered)
         {
-            if (e.timeHappened < e.eventRepeatNumber)
+            if (e.triggerOnExit == triggerOnExit &&
+                e.timeHappened < e.eventRepeatNumber)
             {
                 e.timeHappened++;
                 e.eventToHappen.Invoke();
@@ -68,7 +89,8 @@ public class TriggerDetectStartEvent : MonoBehaviour
 public class EventInfo
 {
     public UnityEvent eventToHappen; // The unity event that will be invoked
-    public int eventRepeatNumber; // How many time can this event be triggered
+    public float eventRepeatNumber; // How many time can this event be triggered
+    public bool triggerOnExit; // Does this event triggers on collider exit or enter
 
     public int timeHappened; // How many time has the event been invoked
 }

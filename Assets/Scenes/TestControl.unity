@@ -44,7 +44,7 @@ RenderSettings:
 LightmapSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 11
-  m_GIWorkflowMode: 0
+  m_GIWorkflowMode: 1
   m_GISettings:
     serializedVersion: 2
     m_BounceScale: 1
@@ -89,7 +89,8 @@ LightmapSettings:
     m_PVRFilteringAtrousPositionSigmaIndirect: 2
     m_PVRFilteringAtrousPositionSigmaAO: 1
     m_ShowResolutionOverlay: 1
-  m_LightingDataAsset: {fileID: 0}
+  m_LightingDataAsset: {fileID: 112000002, guid: a2023a97bb044fb4bac4fa448ea4613b,
+    type: 2}
   m_UseShadowmask: 1
 --- !u!196 &4
 NavMeshSettings:
@@ -811,6 +812,7 @@ MonoBehaviour:
   triggerThreshold: 1
   armLiftingStrength: 1
   armHoldingJointBreakForce: 150
+  collisionRaycastOriginSetBackDistance: 0
   isGrabbingFloor: 0
   joyStickRotationAngle: 0
   joyStickLength: 0
@@ -1129,6 +1131,7 @@ MonoBehaviour:
   animationFinished: 0
   pause: 0
   endDistanceTolerance: 0.2
+  isAnimationRunning: 0
   testing: 0
 --- !u!114 &826146696
 MonoBehaviour:
@@ -1153,6 +1156,7 @@ MonoBehaviour:
   animationFinished: 0
   pause: 0
   endDistanceTolerance: 0.2
+  isAnimationRunning: 0
   testing: 0
 --- !u!65 &826146697
 BoxCollider:
@@ -1436,6 +1440,7 @@ MonoBehaviour:
   triggerThreshold: 1
   armLiftingStrength: 1
   armHoldingJointBreakForce: 150
+  collisionRaycastOriginSetBackDistance: 0
   isGrabbingFloor: 0
   joyStickRotationAngle: 0
   joyStickLength: 0

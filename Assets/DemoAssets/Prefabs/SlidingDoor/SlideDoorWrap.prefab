@@ -156,14 +156,14 @@ MonoBehaviour:
   - startLocalPosition: {x: 0, y: 0, z: 0}
     targetLocalPosition: {x: 1.1, y: 0, z: 0}
     targetShouldBeZero: 0
-    moveSpeed: 6
+    moveSpeed: 5
     waitTimeBeforeNext: 0
     pauseBeforeNext: 0
   objectToBeAnimated: {fileID: 0}
   loopable: 1
   animationFinished: 0
   pause: 0
-  endDistanceTolerance: 0.2
+  endDistanceTolerance: 0.25
   isAnimationRunning: 0
   testing: 0
 --- !u!114 &114326696114236952
@@ -181,14 +181,14 @@ MonoBehaviour:
   - startLocalPosition: {x: 0, y: 0, z: 0}
     targetLocalPosition: {x: 0, y: 0, z: 0}
     targetShouldBeZero: 1
-    moveSpeed: 6
+    moveSpeed: 5
     waitTimeBeforeNext: 0
     pauseBeforeNext: 0
   objectToBeAnimated: {fileID: 0}
   loopable: 1
   animationFinished: 0
   pause: 0
-  endDistanceTolerance: 0.2
+  endDistanceTolerance: 0.25
   isAnimationRunning: 0
   testing: 0
 --- !u!114 &114898111517744008
