@@ -2316,12 +2316,12 @@ Transform:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 120089413}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 63}
   m_LocalScale: {x: 6, y: 1, z: 6}
   m_Children: []
-  m_Father: {fileID: 0}
-  m_RootOrder: 30
+  m_Father: {fileID: 748280168}
+  m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &142390621
 GameObject:
@@ -3306,6 +3306,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   pistol: {fileID: 1601749417}
   tutorialPickUpAndUse: {fileID: 0}
+  normalPistolBullet: {fileID: 0}
   initialRotation: {x: 0, y: 0, z: 0, w: 0}
 --- !u!4 &278996295
 Transform:
@@ -4646,7 +4647,7 @@ GameObject:
   - component: {fileID: 448200285}
   - component: {fileID: 448200286}
   m_Layer: 0
-  m_Name: BatWrap
+  m_Name: CrowbarWrap
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -11166,12 +11167,45 @@ Transform:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 744089413}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: -14.5, y: 0, z: 63.5}
   m_LocalScale: {x: 5, y: 1, z: 5}
   m_Children: []
+  m_Father: {fileID: 748280168}
+  m_RootOrder: 3
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &748280167
+GameObject:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  serializedVersion: 5
+  m_Component:
+  - component: {fileID: 748280168}
+  m_Layer: 0
+  m_Name: TutorialTextTriggers
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &748280168
+Transform:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 748280167}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children:
+  - {fileID: 1412628990}
+  - {fileID: 1027247652}
+  - {fileID: 777160002}
+  - {fileID: 744089419}
+  - {fileID: 120089419}
   m_Father: {fileID: 0}
-  m_RootOrder: 29
+  m_RootOrder: 26
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &777159996
 GameObject:
@@ -11320,12 +11354,12 @@ Transform:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 777159996}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 10.5}
   m_LocalScale: {x: 7, y: 1, z: 7}
   m_Children: []
-  m_Father: {fileID: 0}
-  m_RootOrder: 28
+  m_Father: {fileID: 748280168}
+  m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &787900554
 GameObject:
@@ -12953,13 +12987,13 @@ MonoBehaviour:
   m_margin: {x: 20, y: 20, z: 20, w: 20}
   m_textInfo:
     textComponent: {fileID: 0}
-    characterCount: 64
+    characterCount: 0
     spriteCount: 0
-    spaceCount: 10
-    wordCount: 11
+    spaceCount: 0
+    wordCount: 0
     linkCount: 0
-    lineCount: 2
-    pageCount: 1
+    lineCount: 0
+    pageCount: 0
     materialCount: 1
   m_havePropertiesChanged: 1
   m_isUsingLegacyAnimationComponent: 0
@@ -13227,12 +13261,12 @@ Transform:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1027247646}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 3, y: 1, z: 3}
   m_Children: []
-  m_Father: {fileID: 0}
-  m_RootOrder: 27
+  m_Father: {fileID: 748280168}
+  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1046985706
 GameObject:
@@ -19156,6 +19190,12 @@ Prefab:
       propertyPath: eventCoolDown
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 114042840811318310, guid: dbd429f93e2bfb64cb2138c67a6c353f,
+        type: 2}
+      propertyPath: pistolBullet
+      value: 
+      objectReference: {fileID: 1308790853017890, guid: 9d1d4d230a982f142a7a05f5db428629,
+        type: 2}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: dbd429f93e2bfb64cb2138c67a6c353f, type: 2}
   m_IsPrefabParent: 0
@@ -22606,12 +22646,12 @@ Transform:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1412628984}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 3, y: 1, z: 3}
   m_Children: []
-  m_Father: {fileID: 0}
-  m_RootOrder: 26
+  m_Father: {fileID: 748280168}
+  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &1437095251
 Prefab:
@@ -24002,17 +24042,9 @@ MonoBehaviour:
     areaError: 15
   asset_guid: 
   dontDestroyMeshOnDelete: 0
-  m_selectedFaces: 18000000
-  m_SelectedEdges:
-  - x: 80
-    y: 83
-  - x: 83
-    y: 82
-  - x: 82
-    y: 81
-  - x: 81
-    y: 80
-  m_selectedTriangles: 520000005000000053000000520000005100000050000000
+  m_selectedFaces: 
+  m_SelectedEdges: []
+  m_selectedTriangles: 
 --- !u!33 &1452317641
 MeshFilter:
   m_ObjectHideFlags: 0
@@ -27125,6 +27157,12 @@ Prefab:
       propertyPath: eventCoolDown
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 114042840811318310, guid: dbd429f93e2bfb64cb2138c67a6c353f,
+        type: 2}
+      propertyPath: pistolBullet
+      value: 
+      objectReference: {fileID: 1308790853017890, guid: 9d1d4d230a982f142a7a05f5db428629,
+        type: 2}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: dbd429f93e2bfb64cb2138c67a6c353f, type: 2}
   m_IsPrefabParent: 0
@@ -36121,6 +36159,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   pistol: {fileID: 1184673815}
   tutorialPickUpAndUse: {fileID: 120089413}
+  normalPistolBullet: {fileID: 1308790853017890, guid: adc076a8e0659a7499f33e2042179881,
+    type: 2}
   initialRotation: {x: 0, y: 0, z: 0, w: 0}
 --- !u!4 &2117050875
 Transform:

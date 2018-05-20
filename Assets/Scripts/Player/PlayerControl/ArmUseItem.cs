@@ -15,6 +15,10 @@ public class ArmUseItem : MonoBehaviour
     public bool hasTriggerReleased; // Has the trigger being released since the last pushed down
     public UnityEvent useItem; // The event to be triggered for the holding item when the player start using it
     public UnityEvent stopUsingItem; // The event to be triggered for the holding item when the player stop using it
+    public delegate void UseItemDelegateClass();
+    public delegate void StopUsingItemDelegateClass();
+    public UseItemDelegateClass useItemDelegate;
+    public StopUsingItemDelegateClass stopUsingItemDelegate;
 
     // Use this for initialization
     void Start()
@@ -82,6 +86,7 @@ public class ArmUseItem : MonoBehaviour
     public void StartUsingItem()
     {
         useItem.Invoke();
+        useItemDelegate();
     }
 
     /// <summary>
@@ -90,5 +95,6 @@ public class ArmUseItem : MonoBehaviour
     public void StopUsingItem()
     {
         stopUsingItem.Invoke();
+        stopUsingItemDelegate();
     }
 }

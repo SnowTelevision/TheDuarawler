@@ -32,45 +32,45 @@ public class DetectCollision : MonoBehaviour
 
     private void OnCollisionEnter(Collision collision)
     {
+        VerifyCollision(false, collision.gameObject);
+
         collidingObject = collision.gameObject;
     }
 
     private void OnCollisionStay(Collision collision)
     {
+        VerifyCollision(false, collision.gameObject);
+
         isColliding = true;
         collidingPoint = collision.contacts[0].point;
     }
 
     private void OnCollisionExit(Collision collision)
     {
+        VerifyCollision(false, collision.gameObject);
+
         collidingObject = null;
         isColliding = false;
     }
 
     private void OnTriggerEnter(Collider other)
     {
-        if (other.GetComponent<ItemInfo>())
-        {
-            return;
-        }
+        VerifyCollision(false, other.gameObject);
+
         collidingObject = other.gameObject;
     }
 
     private void OnTriggerStay(Collider other)
     {
-        if (other.GetComponent<ItemInfo>())
-        {
-            return;
-        }
+        VerifyCollision(false, other.gameObject);
+
         isColliding = true;
     }
 
     private void OnTriggerExit(Collider other)
     {
-        if (other.GetComponent<ItemInfo>())
-        {
-            return;
-        }
+        VerifyCollision(false, other.gameObject);
+
         collidingObject = null;
         isColliding = false;
     }
@@ -78,9 +78,18 @@ public class DetectCollision : MonoBehaviour
     /// <summary>
     /// Determine if the collider or trigger should be detected
     /// </summary>
-    public void VerifyCollision(GameObject other)
+    /// <param name="trigger"></param>
+    /// <param name="other"></param>
+    public void VerifyCollision(bool trigger, GameObject other)
     {
+        // Don't detect tutorial trigger box
         if (other.GetComponent<TriggerDetectStartEvent>())
+        {
+            return;
+        }
+
+        // If this is the armTip and the collider is not an item
+        if (trigger && GetComponent<ArmUseItem>() && !other.GetComponent<ItemInfo>())
         {
             return;
         }

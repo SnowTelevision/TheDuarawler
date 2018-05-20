@@ -9,6 +9,7 @@ public class DemoSecurityBehavior : MonoBehaviour
 {
     public GameObject pistol; // The pistol held by the security
     public GameObject tutorialPickUpAndUse; // The tutorial that teaches pick up item and use it
+    public GameObject normalPistolBullet; // The normal pistol bullet that won't send the player back
 
     public Quaternion initialRotation; // The initial rotation of the security
 
@@ -70,7 +71,7 @@ public class DemoSecurityBehavior : MonoBehaviour
 
         // If it is hit
         if (other.name == "SimplePistolBulletWarp(Clone)" ||
-            other.name == "BatWrap")
+            other.name == "CrowbarWrap")
         {
             SecurityDie();
         }
@@ -84,6 +85,10 @@ public class DemoSecurityBehavior : MonoBehaviour
         if (tutorialPickUpAndUse != null)
         {
             tutorialPickUpAndUse.SetActive(true);
+            foreach(SimplePistol p in FindObjectsOfType<SimplePistol>())
+            {
+                p.pistolBullet = normalPistolBullet;
+            }
         }
 
         pistol.GetComponent<ItemInfo>().eventCoolDown = Mathf.Infinity;

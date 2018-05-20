@@ -6,7 +6,7 @@ using UnityEngine.Events;
 /// <summary>
 /// Controls the basic movement of the player arms
 /// </summary>
-public class ControlArm : MonoBehaviour
+public class ControlArm : ArmUseItem
 {
     public bool isLeftArm; // Is this the left arm
     public Transform armTip; // The tip of the arm
@@ -39,6 +39,12 @@ public class ControlArm : MonoBehaviour
         // Don't let the player control the character if the game is in a scripted event
         if (GameManager.inScriptedEvent)
         {
+            // Stop the player from grabbing the floor if the armTip is grabbing floor when the event start
+            if (isGrabbingFloor)
+            {
+                StopGrabbing();
+            }
+
             // Make sure the armTip doesn't "roll away"
             if (!armTip.GetComponent<Rigidbody>().isKinematic)
             {
@@ -223,12 +229,16 @@ public class ControlArm : MonoBehaviour
         // Prevent the player from using the item right when they pick up that item
         armTip.GetComponent<ArmUseItem>().hasTriggerReleased = false;
         // Assign the start and stop using item function to the UnityEvents
-        UnityAction startUsingAction = System.Delegate.CreateDelegate(typeof(UnityAction), pickingItem.GetComponent<ItemInfo>(), "StartUsing") as UnityAction;
-        UnityEditor.Events.UnityEventTools.AddPersistentListener(armTip.GetComponent<ArmUseItem>().useItem, startUsingAction);
+        //UnityAction startUsingAction = System.Delegate.CreateDelegate(typeof(UnityAction), pickingItem.GetComponent<ItemInfo>(), "StartUsing") as UnityAction;
+        //UnityEventTools.AddPersistentListener(armTip.GetComponent<ArmUseItem>().useItem, startUsingAction);
         //armTip.GetComponent<ArmUseItem>().useItem.AddListener(pickingItem.GetComponent<ItemInfo>().StartUsing);
-        UnityAction stopUsingAction = System.Delegate.CreateDelegate(typeof(UnityAction), pickingItem.GetComponent<ItemInfo>(), "StopUsing") as UnityAction;
-        UnityEditor.Events.UnityEventTools.AddPersistentListener(armTip.GetComponent<ArmUseItem>().stopUsingItem, stopUsingAction);
+        //UnityAction stopUsingAction = System.Delegate.CreateDelegate(typeof(UnityAction), pickingItem.GetComponent<ItemInfo>(), "StopUsing") as UnityAction;
+        //UnityEventTools.AddPersistentListener(armTip.GetComponent<ArmUseItem>().stopUsingItem, stopUsingAction);
         //armTip.GetComponent<ArmUseItem>().stopUsingItem.AddListener(pickingItem.GetComponent<ItemInfo>().StopUsing);
+        armTip.GetComponent<ArmUseItem>().useItemDelegate =
+            System.Delegate.CreateDelegate(typeof(UseItemDelegateClass), pickingItem.GetComponent<ItemInfo>(), "StartUsing") as UseItemDelegateClass;
+        armTip.GetComponent<ArmUseItem>().stopUsingItemDelegate =
+            System.Delegate.CreateDelegate(typeof(StopUsingItemDelegateClass), pickingItem.GetComponent<ItemInfo>(), "StopUsing") as StopUsingItemDelegateClass;
 
         // If the other armTip is currently holding the item which is going to be holding by this armTip, then let the other arm drop the item first
         if (otherArm.armTip.GetComponent<ArmUseItem>().currentlyHoldingItem == pickingItem)
@@ -276,10 +286,12 @@ public class ControlArm : MonoBehaviour
         // Remove the start and stop using item function from the UnityEvents
         //armTip.GetComponent<ArmUseItem>().useItem.RemoveAllListeners();
         //armTip.GetComponent<ArmUseItem>().stopUsingItem.RemoveAllListeners();
-        UnityAction startUsingAction = System.Delegate.CreateDelegate(typeof(UnityAction), droppingItem.GetComponent<ItemInfo>(), "StartUsing") as UnityAction;
-        UnityEditor.Events.UnityEventTools.RemovePersistentListener(armTip.GetComponent<ArmUseItem>().useItem, startUsingAction);
-        UnityAction stopUsingAction = System.Delegate.CreateDelegate(typeof(UnityAction), droppingItem.GetComponent<ItemInfo>(), "StopUsing") as UnityAction;
-        UnityEditor.Events.UnityEventTools.RemovePersistentListener(armTip.GetComponent<ArmUseItem>().stopUsingItem, stopUsingAction);
+        //UnityAction startUsingAction = System.Delegate.CreateDelegate(typeof(UnityAction), droppingItem.GetComponent<ItemInfo>(), "StartUsing") as UnityAction;
+        //UnityEventTools.RemovePersistentListener(armTip.GetComponent<ArmUseItem>().useItem, startUsingAction);
+        //UnityAction stopUsingAction = System.Delegate.CreateDelegate(typeof(UnityAction), droppingItem.GetComponent<ItemInfo>(), "StopUsing") as UnityAction;
+        //UnityEventTools.RemovePersistentListener(armTip.GetComponent<ArmUseItem>().stopUsingItem, stopUsingAction);
+        armTip.GetComponent<ArmUseItem>().useItemDelegate = null;
+        armTip.GetComponent<ArmUseItem>().stopUsingItemDelegate = null;
 
         //// Enable the gravity on the rigidbody of the dropping item
         //droppingItem.GetComponent<Rigidbody>().useGravity = true;
@@ -541,10 +553,15 @@ public class ControlArm : MonoBehaviour
         if (Physics.Raycast(bodyRotatingCenter.position - bodyRotatingCenter.forward * collisionRaycastOriginSetBackDistance, bodyRotatingCenter.forward,
             out hit, joyStickLength * armMaxLength + collisionRaycastOriginSetBackDistance + 0 * body.localScale.x, bodyCollidingLayer))
         {
-            //print("Angle: " + Vector3.Angle(hit.normal, transform.forward) + ", Cos: " + Mathf.Cos(Vector3.Angle(hit.normal, transform.forward) * Mathf.Deg2Rad));
-            Debug.DrawLine(bodyRotatingCenter.position, hit.point, Color.red);
-            body.localPosition =
-                new Vector3(0, 0, hit.distance - collisionRaycastOriginSetBackDistance);// - body.localScale.x / 2f / Mathf.Cos(Vector3.Angle(hit.normal, transform.forward) * Mathf.Deg2Rad));
+            // If the ray hits the object that is currently holding by the other armTip, then ignore it, don't retract the arm
+            if (otherArm.armTip.GetComponent<ArmUseItem>().currentlyHoldingItem == null ||
+                hit.transform != otherArm.armTip.GetComponent<ArmUseItem>().currentlyHoldingItem.transform)
+            {
+                //print("Angle: " + Vector3.Angle(hit.normal, transform.forward) + ", Cos: " + Mathf.Cos(Vector3.Angle(hit.normal, transform.forward) * Mathf.Deg2Rad));
+                Debug.DrawLine(bodyRotatingCenter.position, hit.point, Color.red);
+                body.localPosition =
+                    new Vector3(0, 0, hit.distance - collisionRaycastOriginSetBackDistance);// - body.localScale.x / 2f / Mathf.Cos(Vector3.Angle(hit.normal, transform.forward) * Mathf.Deg2Rad));
+            }
         }
     }
 

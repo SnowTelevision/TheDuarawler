@@ -22,6 +22,7 @@ public class CameraLookAtSecurityEvent : MonoBehaviour
         {
             GetComponent<FollowCamera>().enabled = true;
             GameManager.ScriptedEventStop();
+            this.enabled = false;
         }
     }
 
