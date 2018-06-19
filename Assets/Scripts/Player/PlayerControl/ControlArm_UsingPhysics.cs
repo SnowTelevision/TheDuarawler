@@ -6,26 +6,28 @@ using UnityEngine.Events;
 /// <summary>
 /// Controls the basic movement of the player arms
 /// </summary>
-public class ControlArm : ArmUseItem
+public class ControlArm_UsingPhysics : ControlArm
 {
-    public bool isLeftArm; // Is this the left arm
-    public Transform armTip; // The tip of the arm
-    public Transform arm; // The actual arm that extends from the center of the body to the arm tip
-    public float armMaxLength; // How long is the maximum arm length
-    public Transform bodyRotatingCenter; // What is the center that the body is rotating around
-    public Transform body; // The main body
-    public DetectCollision bodyWallDetector; // The collider on the body that detects the walls
-    public LayerMask armCollidingLayer; // The object layers that the arm can collide with
-    public LayerMask bodyCollidingLayer; // The object layers that the body can collide with
-    public ControlArm otherArm; // The other arm
-    public float triggerThreshold; // How much the trigger has to be pressed down to register
-    public float armLiftingStrength; // How much weight the arm can lift? (The currently holding item's weight)
-    public float armHoldingJointBreakForce; // How much force the fixed joint between the armTip and the currently holding item can bearing before break
-    public float collisionRaycastOriginSetBackDistance; // How far should the raycast's origin move back from the pivot center when detecting collision of armTip/body
+    //public bool isLeftArm; // Is this the left arm
+    //public Transform armTip; // The tip of the arm
+    //public Transform arm; // The actual arm that extends from the center of the body to the arm tip
+    //public float armMaxLength; // How long is the maximum arm length
+    //public Transform bodyRotatingCenter; // What is the center that the body is rotating around
+    //public Transform body; // The main body
+    //public DetectCollision bodyWallDetector; // The collider on the body that detects the walls
+    //public LayerMask armCollidingLayer; // The object layers that the arm can collide with
+    //public LayerMask bodyCollidingLayer; // The object layers that the body can collide with
+    public ControlArm_UsingPhysics otherArm_Physics; // The other arm
+    //public float triggerThreshold; // How much the trigger has to be pressed down to register
+    //public float armLiftingStrength; // How much weight the arm can lift? (The currently holding item's weight)
+    //public float armHoldingJointBreakForce; // How much force the fixed joint between the armTip and the currently holding item can bearing before break
+    //public float collisionRaycastOriginSetBackDistance; // How far should the raycast's origin move back from the pivot center when detecting collision of armTip/body
+    public float armDefaultStretchForce; // How much force should be applied for the armTip to strech and retract
+    public float armStopThreshold; // How close the armTip has to be to the target position for it to stop being pushed
 
-    public bool isGrabbingFloor; // If the armTip is grabbing floor
-    public float joyStickRotationAngle; // The rotation of the arm
-    public float joyStickLength; // How much the joystick is pushed away
+    //public bool isGrabbingFloor; // If the armTip is grabbing floor
+    //public float joyStickRotationAngle; // The rotation of the arm
+    //public float joyStickLength; // How much the joystick is pushed away
 
     // Use this for initialization
     void Start()
@@ -34,7 +36,12 @@ public class ControlArm : ArmUseItem
     }
 
     // Update is called once per frame
-    public virtual void Update()
+    public override void Update()
+    {
+
+    }
+
+    private void FixedUpdate()
     {
         // Don't let the player control the character if the game is in a scripted event
         if (GameManager.inScriptedEvent)
@@ -99,6 +106,7 @@ public class ControlArm : ArmUseItem
     //    UpdateArmTransform();
     //}
 
+    /*
     /// <summary>
     /// Detect if the player want to start grabbing the floor with the armTip, and see if can grab or not
     /// If the armTip is currently holding an usable item, then drop the item first. The player need to press
@@ -216,13 +224,14 @@ public class ControlArm : ArmUseItem
             }
         }
     }
+    */
 
     /// <summary>
     /// Start picking up the item
     /// </summary>
     /// <param name="pickingItem"></param>
     /// <returns></returns>
-    public virtual IEnumerator PickUpItem(GameObject pickingItem)
+    public override IEnumerator PickUpItem(GameObject pickingItem)
     {
         // Assign the item that is currently colliding with the armTip to the armTip's current holding item
         armTip.GetComponent<ArmUseItem>().currentlyHoldingItem = pickingItem;
@@ -241,9 +250,9 @@ public class ControlArm : ArmUseItem
             System.Delegate.CreateDelegate(typeof(StopUsingItemDelegateClass), pickingItem.GetComponent<ItemInfo>(), "StopUsing") as StopUsingItemDelegateClass;
 
         // If the other armTip is currently holding the item which is going to be holding by this armTip, then let the other arm drop the item first
-        if (otherArm.armTip.GetComponent<ArmUseItem>().currentlyHoldingItem == pickingItem)
+        if (otherArm_Physics.armTip.GetComponent<ArmUseItem>().currentlyHoldingItem == pickingItem)
         {
-            otherArm.DropDownItem(pickingItem);
+            otherArm_Physics.DropDownItem(pickingItem);
         }
 
         yield return new WaitForEndOfFrame();
@@ -281,7 +290,7 @@ public class ControlArm : ArmUseItem
     /// </summary>
     /// <param name="droppingItem"></param>
     /// <returns></returns>
-    public virtual void DropDownItem(GameObject droppingItem)
+    public override void DropDownItem(GameObject droppingItem)
     {
         // Remove the start and stop using item function from the UnityEvents
         //armTip.GetComponent<ArmUseItem>().useItem.RemoveAllListeners();
@@ -322,6 +331,7 @@ public class ControlArm : ArmUseItem
         armTip.GetComponent<ArmUseItem>().currentlyHoldingItem = null;
     }
 
+    /*
     /// <summary>
     /// Turn off colliders in a gameobject
     /// </summary>
@@ -412,9 +422,6 @@ public class ControlArm : ArmUseItem
         }
     }
 
-    /// <summary>
-    /// Controls the look of the arm that connects the body and the armTip
-    /// </summary>
     public void UpdateArmTransform()
     {
         arm.localPosition = armTip.localPosition / 2f; // Put the center of the arm in the middle between the armTip and the body center
@@ -424,12 +431,13 @@ public class ControlArm : ArmUseItem
         armTip.GetComponent<Rigidbody>().angularVelocity = Vector3.zero; // Keep the armTip's angular velocity always (0, 0, 0)
         armTip.localEulerAngles = Vector3.zero; // Keep the armTip's local euler angles always (0, 0, 0)
     }
+    */
 
     /// <summary>
     /// Rotate the arm according to the joystick's rotation
     /// </summary>
     /// <param name="left"></param>
-    public virtual void RotateArm(bool left)
+    public override void RotateArm(bool left)
     {
         //Vector3 previousEuler = transform.eulerAngles;
         //Vector3 previousArmTipPosition = armTip.position;
@@ -451,12 +459,26 @@ public class ControlArm : ArmUseItem
     /// Stretch the arm according to the joystick's tilt
     /// </summary>
     /// <param name="left"></param>
-    public virtual void StretchArm(bool left)
+    public override void StretchArm(bool left)
     {
-        //Vector3 previousArmTipPosition = armTip.position;
+        Vector3 targetArmTipPosition = transform.TransformPoint(new Vector3(0, 0, joyStickLength * armMaxLength));
+        float targetDistance = Vector3.Magnitude(targetArmTipPosition - armTip.transform.position);
+        //armTip.GetComponent<Rigidbody>().velocity = Vector3.zero;
+        //armTip.GetComponent<Rigidbody>().AddForce(Vector3.Normalize(targetArmTipPosition - armTip.transform.position) * Mathf.Pow(joyStickLength * armMaxLength, 2) * armTip.GetComponent<Rigidbody>().mass, 
+        //                                          ForceMode.Impulse);
+        if (targetDistance <= armStopThreshold)
+        {
+            armTip.GetComponent<Rigidbody>().AddForce(Vector3.Normalize(targetArmTipPosition - armTip.transform.position) * armDefaultStretchForce * targetDistance,
+                                                      ForceMode.Impulse);
+        }
+        else
+        {
+            armTip.GetComponent<Rigidbody>().AddForce(Vector3.Normalize(targetArmTipPosition - armTip.transform.position) * armDefaultStretchForce,
+                                                      ForceMode.Impulse);
+        }
 
         // Calculate how long the arm extends
-        armTip.localPosition = new Vector3(0, 0, joyStickLength * armMaxLength);
+        //armTip.localPosition = new Vector3(0, 0, joyStickLength * armMaxLength);
         //armTip.GetComponent<Rigidbody>().MovePosition(transform.TransformPoint(new Vector3(0, 0, joyStickLength * armMaxLength)));
 
         //// If the armTip collide on something
@@ -479,33 +501,33 @@ public class ControlArm : ArmUseItem
         //    }
         //}
 
-        // If the arm will collide on something within the current stretching length
-        RaycastHit hit;
-        // Don't extend if the armTip will go into collider
-        if (Physics.Raycast(transform.position - transform.forward * collisionRaycastOriginSetBackDistance, transform.forward,
-            out hit, joyStickLength * armMaxLength + collisionRaycastOriginSetBackDistance + armTip.localScale.x / 2f, armCollidingLayer))
-        {
-            // If the ray hits the object that is currently holding by the armTip, then ignore it, don't retract the arm
-            if (armTip.GetComponent<ArmUseItem>().currentlyHoldingItem == null ||
-                hit.transform != armTip.GetComponent<ArmUseItem>().currentlyHoldingItem.transform)
-            {
-                //print(hit.transform.name);
-                armTip.localPosition =
-                    //new Vector3(0, 0, hit.distance - armTip.localScale.x / Mathf.Cos(Vector3.Angle(hit.normal, transform.forward) * Mathf.Deg2Rad));
-                    new Vector3(0, 0, hit.distance - collisionRaycastOriginSetBackDistance);
-            }
-        }
+        //// If the arm will collide on something within the current stretching length
+        //RaycastHit hit;
+        //// Don't extend if the armTip will go into collider
+        //if (Physics.Raycast(transform.position - transform.forward * collisionRaycastOriginSetBackDistance, transform.forward,
+        //    out hit, joyStickLength * armMaxLength + collisionRaycastOriginSetBackDistance + armTip.localScale.x / 2f, armCollidingLayer))
+        //{
+        //    // If the ray hits the object that is currently holding by the armTip, then ignore it, don't retract the arm
+        //    if (armTip.GetComponent<ArmUseItem>().currentlyHoldingItem == null ||
+        //        hit.transform != armTip.GetComponent<ArmUseItem>().currentlyHoldingItem.transform)
+        //    {
+        //        //print(hit.transform.name);
+        //        armTip.localPosition =
+        //            //new Vector3(0, 0, hit.distance - armTip.localScale.x / Mathf.Cos(Vector3.Angle(hit.normal, transform.forward) * Mathf.Deg2Rad));
+        //            new Vector3(0, 0, hit.distance - collisionRaycastOriginSetBackDistance);
+        //    }
+        //}
     }
 
     /// <summary>
     /// When this armTip start grabbing floor
     /// </summary>
-    public virtual void StartGrabbing()
+    public override void StartGrabbing()
     {
         isGrabbingFloor = true;
-        if (otherArm.isGrabbingFloor)
+        if (otherArm_Physics.isGrabbingFloor)
         {
-            otherArm.isGrabbingFloor = false;
+            otherArm_Physics.isGrabbingFloor = false;
             body.SetParent(null, true);
         }
 
@@ -517,7 +539,7 @@ public class ControlArm : ArmUseItem
     /// <summary>
     /// When this armTip stop grabbing floor
     /// </summary>
-    public virtual void StopGrabbing()
+    public override void StopGrabbing()
     {
         if (isGrabbingFloor)
         {
@@ -530,7 +552,7 @@ public class ControlArm : ArmUseItem
     /// <summary>
     /// Rotate the body around the armTip
     /// </summary>
-    public virtual void RotateBody()
+    public override void RotateBody()
     {
         bodyRotatingCenter.eulerAngles = new Vector3(0, joyStickRotationAngle - (Mathf.Sign(joyStickRotationAngle) * 180), 0);
     }
@@ -538,7 +560,7 @@ public class ControlArm : ArmUseItem
     /// <summary>
     /// Move the body around the armTip
     /// </summary>
-    public virtual void MoveBody()
+    public override void MoveBody()
     {
         body.localPosition = new Vector3(0, 0, joyStickLength * armMaxLength);
 
@@ -557,8 +579,8 @@ public class ControlArm : ArmUseItem
             out hit, joyStickLength * armMaxLength + collisionRaycastOriginSetBackDistance + 0 * body.localScale.x, bodyCollidingLayer))
         {
             // If the ray hits the object that is currently holding by the other armTip, then ignore it, don't retract the arm
-            if (otherArm.armTip.GetComponent<ArmUseItem>().currentlyHoldingItem == null ||
-                hit.transform != otherArm.armTip.GetComponent<ArmUseItem>().currentlyHoldingItem.transform)
+            if (otherArm_Physics.armTip.GetComponent<ArmUseItem>().currentlyHoldingItem == null ||
+                hit.transform != otherArm_Physics.armTip.GetComponent<ArmUseItem>().currentlyHoldingItem.transform)
             {
                 //print("Angle: " + Vector3.Angle(hit.normal, transform.forward) + ", Cos: " + Mathf.Cos(Vector3.Angle(hit.normal, transform.forward) * Mathf.Deg2Rad));
                 Debug.DrawLine(bodyRotatingCenter.position, hit.point, Color.red);
