@@ -24,24 +24,25 @@ public class ControlArm_UsingPhysics : ControlArm
     //public float collisionRaycastOriginSetBackDistance; // How far should the raycast's origin move back from the pivot center when detecting collision of armTip/body
     public float armDefaultStretchForce; // How much force should be applied for the armTip to strech and retract
     public float armStopThreshold; // How close the armTip has to be to the target position for it to stop being pushed
+    public float armMaximumStamina; // How much total stamina each arm has
+    public float armStaminaDefaultRecoverSpeed; // The default speed each arm will recharge its stamina
+    public float armStaminaConsumptionRateWhileMovingBody; // How much stamina the arm will consume per sec while it is moving the body
+    public float maxStaminaInitialBurstMulti; // How much times of the default force the arm can apply when it just start moving while on maximum stamina
 
     //public bool isGrabbingFloor; // If the armTip is grabbing floor
     //public float joyStickRotationAngle; // The rotation of the arm
     //public float joyStickLength; // How much the joystick is pushed away
+    public float armCurrentStamina; // This arm's current stamina amount
+    public Vector3 armTipGrabbingPosition; // The armTip's position when it starts grabbing
 
     // Use this for initialization
     void Start()
     {
-
+        armCurrentStamina = armMaximumStamina;
     }
 
     // Update is called once per frame
     public override void Update()
-    {
-
-    }
-
-    private void FixedUpdate()
     {
         // Don't let the player control the character if the game is in a scripted event
         if (GameManager.inScriptedEvent)
@@ -90,15 +91,21 @@ public class ControlArm_UsingPhysics : ControlArm
 
         if (isGrabbingFloor)
         {
-            armTip.position = bodyRotatingCenter.position;
+            //armTip.position = bodyRotatingCenter.position;
             RotateBody();
             MoveBody();
+            armTip.position = armTipGrabbingPosition;
         }
 
         UpdateArmTransform();
-
+        UpdateArmStamina();
         // Test
         //TestControllerInput();
+    }
+
+    private void FixedUpdate()
+    {
+
     }
 
     //private void FixedUpdate()
@@ -106,13 +113,49 @@ public class ControlArm_UsingPhysics : ControlArm
     //    UpdateArmTransform();
     //}
 
-    /*
+    /// <summary>
+    /// Calculate and returns this arm's current strength output
+    /// </summary>
+    /// <returns></returns>
+    public float CalculateCurrentArmStrength()
+    {
+        float armStrength = armDefaultStretchForce / armMaximumStamina * armCurrentStamina;
+
+        return armStrength;
+    }
+
+    /// <summary>
+    /// Updates this arm's current stamina based on its current behavior
+    /// </summary>
+    public void UpdateArmStamina()
+    {
+        if (isGrabbingFloor) // If the arm is grabbing onto floor
+        {
+            armCurrentStamina -= armStaminaConsumptionRateWhileMovingBody * Time.deltaTime;
+        }
+        else if (armTip.GetComponent<ArmUseItem>().currentlyHoldingItem != null) // If the arm is holding an item
+        {
+
+        }
+        else
+        {
+            if (armCurrentStamina < armMaximumStamina) // If the arm's current stamina is not full then start recover
+            {
+                armCurrentStamina += armStaminaDefaultRecoverSpeed * Time.deltaTime;
+            }
+            else
+            {
+                armCurrentStamina = armMaximumStamina;
+            }
+        }
+    }
+
     /// <summary>
     /// Detect if the player want to start grabbing the floor with the armTip, and see if can grab or not
     /// If the armTip is currently holding an usable item, then drop the item first. The player need to press
     /// the grab button again to start grabbing floor
     /// </summary>
-    public void DetectGrabbingFloorInput()
+    public override void DetectGrabbingFloorInput()
     {
         if (isLeftArm)
         {
@@ -165,6 +208,7 @@ public class ControlArm_UsingPhysics : ControlArm
         }
     }
 
+    /*
     /// <summary>
     /// Detect if the armTip is colliding with an item, and if the player want to pick up an item
     /// </summary>
@@ -455,27 +499,71 @@ public class ControlArm_UsingPhysics : ControlArm
         //}
     }
 
+    // Calculate the direction and the amount of the force that should be applied
+    public Vector3 CalculateArmForce(bool moveBody, Vector3 currentPosition, float carryingWeight)
+    {
+        Vector3 targetPosition;
+
+        if (moveBody)
+        {
+            targetPosition = armTip.position + (new Vector3(Mathf.Sin(joyStickRotationAngle * Mathf.Deg2Rad), 0, Mathf.Cos(joyStickRotationAngle * Mathf.Deg2Rad)) * 
+                                                joyStickLength * armMaxLength);
+            //print("armTip: " + armTip.position + ", target: " + targetPosition);
+            //Debug.DrawLine(armTip.position, armTip.position + new Vector3(Mathf.Sin(joyStickRotationAngle * Mathf.Deg2Rad), 0, Mathf.Cos(joyStickRotationAngle * Mathf.Deg2Rad)) * joyStickLength * armMaxLength);
+            //print("joystick angle: " + joyStickRotationAngle);
+        }
+        else
+        {
+            targetPosition = transform.TransformPoint(new Vector3(0, 0, joyStickLength * armMaxLength));
+        }
+        float targetDistance = Vector3.Magnitude(targetPosition - currentPosition);
+
+        if (targetDistance <= armStopThreshold) // If the current position is close to the target position, then only apply a small force
+        {
+            return Vector3.Normalize(targetPosition - currentPosition) * CalculateCurrentArmStrength() * targetDistance;
+        }
+        else
+        {
+            if (armCurrentStamina >= armMaximumStamina) // If the arm just start moving and its stamina is full, then add an extra "bonus" force
+            {
+                if (isGrabbingFloor || 
+                    (armTip.GetComponent<ArmUseItem>().currentlyHoldingItem != null && 
+                     armTip.GetComponent<ArmUseItem>().currentlyHoldingItem.GetComponent<ItemInfo>().itemWeight > armLiftingStrength)) // Only give bonus when the arm is moving body or other large objects
+                {
+                    return Vector3.Normalize(targetPosition - currentPosition) * CalculateCurrentArmStrength() * maxStaminaInitialBurstMulti;
+                }
+                else
+                {
+                    return Vector3.Normalize(targetPosition - currentPosition) * CalculateCurrentArmStrength();
+                }
+            }
+
+            return Vector3.Normalize(targetPosition - currentPosition) * CalculateCurrentArmStrength();
+        }
+    }
+
     /// <summary>
     /// Stretch the arm according to the joystick's tilt
     /// </summary>
     /// <param name="left"></param>
     public override void StretchArm(bool left)
     {
-        Vector3 targetArmTipPosition = transform.TransformPoint(new Vector3(0, 0, joyStickLength * armMaxLength));
-        float targetDistance = Vector3.Magnitude(targetArmTipPosition - armTip.transform.position);
+        //Vector3 targetArmTipPosition = transform.TransformPoint(new Vector3(0, 0, joyStickLength * armMaxLength));
+        //float targetDistance = Vector3.Magnitude(targetArmTipPosition - armTip.transform.position);
         //armTip.GetComponent<Rigidbody>().velocity = Vector3.zero;
         //armTip.GetComponent<Rigidbody>().AddForce(Vector3.Normalize(targetArmTipPosition - armTip.transform.position) * Mathf.Pow(joyStickLength * armMaxLength, 2) * armTip.GetComponent<Rigidbody>().mass, 
         //                                          ForceMode.Impulse);
-        if (targetDistance <= armStopThreshold)
-        {
-            armTip.GetComponent<Rigidbody>().AddForce(Vector3.Normalize(targetArmTipPosition - armTip.transform.position) * armDefaultStretchForce * targetDistance,
-                                                      ForceMode.Impulse);
-        }
-        else
-        {
-            armTip.GetComponent<Rigidbody>().AddForce(Vector3.Normalize(targetArmTipPosition - armTip.transform.position) * armDefaultStretchForce,
-                                                      ForceMode.Impulse);
-        }
+        //if (targetDistance <= armStopThreshold)
+        //{
+        //    armTip.GetComponent<Rigidbody>().AddForce(Vector3.Normalize(targetArmTipPosition - armTip.transform.position) * CalculateCurrentArmStrength() * targetDistance,
+        //                                              ForceMode.Impulse);
+        //}
+        //else
+        //{
+        //    armTip.GetComponent<Rigidbody>().AddForce(Vector3.Normalize(targetArmTipPosition - armTip.transform.position) * CalculateCurrentArmStrength(),
+        //                                              ForceMode.Impulse);
+        //}
+        armTip.GetComponent<Rigidbody>().AddForce(CalculateArmForce(false, armTip.transform.position, armTip.GetComponent<Rigidbody>().mass), ForceMode.Impulse);
 
         // Calculate how long the arm extends
         //armTip.localPosition = new Vector3(0, 0, joyStickLength * armMaxLength);
@@ -525,15 +613,16 @@ public class ControlArm_UsingPhysics : ControlArm
     public override void StartGrabbing()
     {
         isGrabbingFloor = true;
-        if (otherArm_Physics.isGrabbingFloor)
-        {
-            otherArm_Physics.isGrabbingFloor = false;
-            body.SetParent(null, true);
-        }
+        armTipGrabbingPosition = armTip.position;
+        //if (otherArm_Physics.isGrabbingFloor)
+        //{
+        //    otherArm_Physics.isGrabbingFloor = false;
+        //    body.SetParent(null, true);
+        //}
 
-        bodyRotatingCenter.position = armTip.position;
-        bodyRotatingCenter.eulerAngles = new Vector3(0, joyStickRotationAngle - (Mathf.Sign(joyStickRotationAngle) * 180), 0);
-        body.SetParent(bodyRotatingCenter, true);
+        //bodyRotatingCenter.position = armTip.position;
+        //bodyRotatingCenter.eulerAngles = new Vector3(0, joyStickRotationAngle - (Mathf.Sign(joyStickRotationAngle) * 180), 0);
+        //body.SetParent(bodyRotatingCenter, true);
     }
 
     /// <summary>
@@ -545,7 +634,7 @@ public class ControlArm_UsingPhysics : ControlArm
         {
             isGrabbingFloor = false;
             //body.parent = null;
-            body.SetParent(null, true);
+            //body.SetParent(null, true);
         }
     }
 
@@ -554,7 +643,8 @@ public class ControlArm_UsingPhysics : ControlArm
     /// </summary>
     public override void RotateBody()
     {
-        bodyRotatingCenter.eulerAngles = new Vector3(0, joyStickRotationAngle - (Mathf.Sign(joyStickRotationAngle) * 180), 0);
+        //bodyRotatingCenter.eulerAngles = new Vector3(0, joyStickRotationAngle - (Mathf.Sign(joyStickRotationAngle) * 180), 0);
+        body.eulerAngles = new Vector3(0, joyStickRotationAngle, 0);
     }
 
     /// <summary>
@@ -562,7 +652,8 @@ public class ControlArm_UsingPhysics : ControlArm
     /// </summary>
     public override void MoveBody()
     {
-        body.localPosition = new Vector3(0, 0, joyStickLength * armMaxLength);
+        //body.localPosition = new Vector3(0, 0, joyStickLength * armMaxLength);
+        body.GetComponent<Rigidbody>().AddForce(CalculateArmForce(true, body.position, armTip.GetComponent<Rigidbody>().mass), ForceMode.Impulse);
 
         //if (bodyWallDetector.isColliding)
         //{
@@ -572,6 +663,7 @@ public class ControlArm_UsingPhysics : ControlArm
         //    //body.position = bodyWallDetector.collidingPoint;
         //}
 
+        /*
         Debug.DrawLine(bodyRotatingCenter.position, bodyRotatingCenter.position + bodyRotatingCenter.forward * (joyStickLength * armMaxLength + body.localScale.x), Color.green);
         // Don't extend if the armTip will go into collider
         RaycastHit hit;
@@ -588,6 +680,7 @@ public class ControlArm_UsingPhysics : ControlArm
                     new Vector3(0, 0, hit.distance - collisionRaycastOriginSetBackDistance);// - body.localScale.x / 2f / Mathf.Cos(Vector3.Angle(hit.normal, transform.forward) * Mathf.Deg2Rad));
             }
         }
+        */
     }
 
     /// <summary>

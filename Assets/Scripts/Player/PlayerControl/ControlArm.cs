@@ -104,7 +104,7 @@ public class ControlArm : ArmUseItem
     /// If the armTip is currently holding an usable item, then drop the item first. The player need to press
     /// the grab button again to start grabbing floor
     /// </summary>
-    public void DetectGrabbingFloorInput()
+    public virtual void DetectGrabbingFloorInput()
     {
         if (isLeftArm)
         {
