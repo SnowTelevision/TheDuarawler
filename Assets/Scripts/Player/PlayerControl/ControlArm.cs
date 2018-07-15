@@ -71,7 +71,7 @@ public class ControlArm : ArmUseItem
 
             if (armTip.GetComponent<ArmUseItem>().currentlyHoldingItem != null)
             {
-                DetectIfDropUnusableItem();
+                DetectIfDropHeavyItem();
             }
         }
         //else
@@ -164,7 +164,7 @@ public class ControlArm : ArmUseItem
     {
         // If the arm tip is colliding with an item
         if (armTip.GetComponent<DetectCollision>().collidingObject != null &&
-            armTip.GetComponent<DetectCollision>().collidingObject.GetComponent<ItemInfo>())
+            armTip.GetComponent<DetectCollision>().collidingObject.GetComponentInParent<ItemInfo>())
         {
             // Picking or dropping item
             // Usable item is click trigger to pick up, click shoulder to drop
@@ -175,7 +175,7 @@ public class ControlArm : ArmUseItem
                 // If the left armTip is not holding an item and the left trigger is pressed down
                 if (armTip.GetComponent<ArmUseItem>().currentlyHoldingItem == null && Input.GetAxis("LeftTrigger") >= triggerThreshold)
                 {
-                    StartCoroutine(PickUpItem(armTip.GetComponent<DetectCollision>().collidingObject));
+                    StartCoroutine(PickUpItem(armTip.GetComponent<DetectCollision>().collidingObject.GetComponentInParent<ItemInfo>().gameObject));
                 }
             }
 
@@ -184,7 +184,7 @@ public class ControlArm : ArmUseItem
                 // If the right armTip is not holding an item and the right trigger is pressed down
                 if (armTip.GetComponent<ArmUseItem>().currentlyHoldingItem == null && Input.GetAxis("RightTrigger") >= triggerThreshold)
                 {
-                    StartCoroutine(PickUpItem(armTip.GetComponent<DetectCollision>().collidingObject));
+                    StartCoroutine(PickUpItem(armTip.GetComponent<DetectCollision>().collidingObject.GetComponentInParent<ItemInfo>().gameObject));
                 }
             }
         }
@@ -193,7 +193,7 @@ public class ControlArm : ArmUseItem
     /// <summary>
     /// Detect if the player release the trigger to drop an unusable item
     /// </summary>
-    public void DetectIfDropUnusableItem()
+    public virtual void DetectIfDropHeavyItem()
     {
         if (isLeftArm)
         {
@@ -335,7 +335,7 @@ public class ControlArm : ArmUseItem
     }
 
     /// <summary>
-    /// Turn off colliders in a gameobject
+    /// Turn on colliders in a gameobject
     /// </summary>
     /// <param name="g"></param>
     public void TurnOnColliders(GameObject g)

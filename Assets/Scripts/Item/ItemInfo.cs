@@ -31,7 +31,7 @@ public class ItemInfo : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        CalculatingItemTransform();
+        //CalculatingItemTransform();
     }
 
     public void CalculatingItemTransform()

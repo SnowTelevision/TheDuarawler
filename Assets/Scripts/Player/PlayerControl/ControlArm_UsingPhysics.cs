@@ -73,13 +73,25 @@ public class ControlArm_UsingPhysics : ControlArm
 
         if (!isGrabbingFloor)
         {
-            RotateArm(isLeftArm);
-            StretchArm(isLeftArm);
-            DetectIfPickingUpItem();
-
-            if (armTip.GetComponent<ArmUseItem>().currentlyHoldingItem != null)
+            if (armTip.GetComponent<ArmUseItem>().currentlyHoldingItem == null) // If the arm is not holding item
             {
-                DetectIfDropUnusableItem();
+                RotateArm(isLeftArm);
+                StretchArm(isLeftArm);
+                DetectIfPickingUpItem();
+            }
+            else if (armTip.GetComponent<ArmUseItem>().currentlyHoldingItem != null) // If the arm is holding item
+            {
+                if (armTip.GetComponent<ArmUseItem>().currentlyHoldingItem.GetComponent<ItemInfo>().itemWeight <= armLiftingStrength) // Is the item is not heavy
+                {
+                    RotateArm(isLeftArm);
+                    StretchArm(isLeftArm);
+                }
+                else // If the item is heavy
+                {
+                    MoveHeavyItem(armTip.GetComponent<ArmUseItem>().currentlyHoldingItem);
+                }
+
+                DetectIfDropHeavyItem();
             }
         }
         //else
@@ -135,7 +147,10 @@ public class ControlArm_UsingPhysics : ControlArm
         }
         else if (armTip.GetComponent<ArmUseItem>().currentlyHoldingItem != null) // If the arm is holding an item
         {
-
+            if (armTip.GetComponent<ArmUseItem>().currentlyHoldingItem.GetComponent<ItemInfo>().itemWeight > armLiftingStrength)
+            {
+                armCurrentStamina -= armStaminaConsumptionRateWhileMovingBody * Time.deltaTime;
+            }
         }
         else
         {
@@ -241,17 +256,18 @@ public class ControlArm_UsingPhysics : ControlArm
             }
         }
     }
+    */
 
     /// <summary>
     /// Detect if the player release the trigger to drop an unusable item
     /// </summary>
-    public void DetectIfDropUnusableItem()
+    public override void DetectIfDropHeavyItem()
     {
         if (isLeftArm)
         {
-            // If the left armTip is holding an unusable item and the trigger is lifting up
-            if (!armTip.GetComponent<ArmUseItem>().currentlyHoldingItem.GetComponent<ItemInfo>().canUse &&
-                Input.GetAxis("LeftTrigger") < triggerThreshold)
+            // If the left armTip is holding a heavy item and the trigger is lifting up or arm's stamina is empty
+            if (armTip.GetComponent<ArmUseItem>().currentlyHoldingItem.GetComponent<ItemInfo>().itemWeight > armLiftingStrength &&
+                (Input.GetAxis("LeftTrigger") < triggerThreshold || armCurrentStamina <= 0))
             {
                 DropDownItem(armTip.GetComponent<ArmUseItem>().currentlyHoldingItem);
             }
@@ -261,14 +277,13 @@ public class ControlArm_UsingPhysics : ControlArm
         if (!isLeftArm)
         {
             // If the right armTip is holding an unusable item and the trigger is lifting up
-            if (!armTip.GetComponent<ArmUseItem>().currentlyHoldingItem.GetComponent<ItemInfo>().canUse &&
-                Input.GetAxis("RightTrigger") < triggerThreshold)
+            if (armTip.GetComponent<ArmUseItem>().currentlyHoldingItem.GetComponent<ItemInfo>().itemWeight > armLiftingStrength &&
+                (Input.GetAxis("RightTrigger") < triggerThreshold || armCurrentStamina <= 0))
             {
                 DropDownItem(armTip.GetComponent<ArmUseItem>().currentlyHoldingItem);
             }
         }
     }
-    */
 
     /// <summary>
     /// Start picking up the item
@@ -301,29 +316,43 @@ public class ControlArm_UsingPhysics : ControlArm
 
         yield return new WaitForEndOfFrame();
 
-        // If the item can be lifted by the arm, then disable it's gravity and raise it to the arm's height
+        //// If the item can be lifted by the arm, then disable it's gravity and raise it to the arm's height
         if (pickingItem.GetComponent<ItemInfo>().itemWeight <= armLiftingStrength)
         {
-            //// Turn off the collider
-            //TurnOffColliders(armTip.GetComponent<ArmUseItem>().currentlyHoldingItem);
-            //// Turn off mass, drag, etc.
-            //pickingItem.GetComponent<Rigidbody>().useGravity = false;
-            //pickingItem.GetComponent<Rigidbody>().drag = 0;
-            //pickingItem.GetComponent<Rigidbody>().angularDrag = 0;
-            //pickingItem.GetComponent<Rigidbody>().mass = 0;
-            // Change the item to kinematic
-            pickingItem.GetComponent<Rigidbody>().isKinematic = true;
-            // Raise the item
+            // Change the item's velocity to 0
+            pickingItem.GetComponent<Rigidbody>().velocity = Vector3.zero;
+            pickingItem.GetComponent<Rigidbody>().angularVelocity = Vector3.zero;
+            // Raise the item to the arm's height
             pickingItem.transform.position = armTip.position;
+
+            if (pickingItem.GetComponent<ItemInfo>().canUse)
+            {
+                //// Turn off the collider
+                //TurnOffColliders(armTip.GetComponent<ArmUseItem>().currentlyHoldingItem);
+                // Turn off mass, drag, etc.
+                pickingItem.GetComponent<Rigidbody>().drag = 0;
+                pickingItem.GetComponent<Rigidbody>().angularDrag = 0;
+                pickingItem.GetComponent<Rigidbody>().mass = 0;
+                //// Change the item to kinematic
+                //pickingItem.GetComponent<Rigidbody>().isKinematic = true;
+                // Rotate the item so the player can aim the usable item
+                pickingItem.transform.rotation = armTip.rotation;
+            }
         }
-        else
-        {
-            // Add a fixed joint to the holding item to attach it to the armTip
-            pickingItem.gameObject.AddComponent<FixedJoint>();
-            pickingItem.GetComponent<FixedJoint>().connectedBody = armTip.GetComponent<Rigidbody>();
-            pickingItem.GetComponent<FixedJoint>().autoConfigureConnectedAnchor = true;
-            pickingItem.GetComponent<FixedJoint>().breakForce = armHoldingJointBreakForce;
-        }
+        //else
+        //{
+        // Turn off the gravity of the picking item
+        pickingItem.GetComponent<Rigidbody>().useGravity = false;
+        // Add a fixed joint to the holding item to attach it to the armTip
+        //pickingItem.gameObject.AddComponent<FixedJoint>();
+        //pickingItem.GetComponent<FixedJoint>().connectedBody = armTip.GetComponent<Rigidbody>();
+        //pickingItem.GetComponent<FixedJoint>().autoConfigureConnectedAnchor = true;
+        //pickingItem.GetComponent<FixedJoint>().breakForce = armHoldingJointBreakForce;
+        armTip.gameObject.AddComponent<FixedJoint>();
+        armTip.GetComponent<FixedJoint>().connectedBody = pickingItem.GetComponent<Rigidbody>();
+        //armTip.GetComponent<FixedJoint>().autoConfigureConnectedAnchor = true;
+        armTip.GetComponent<FixedJoint>().breakForce = armHoldingJointBreakForce;
+        //}
 
         pickingItem.GetComponent<ItemInfo>().isBeingHeld = true;
         pickingItem.GetComponent<ItemInfo>().holdingArm = armTip;
@@ -346,28 +375,29 @@ public class ControlArm_UsingPhysics : ControlArm
         armTip.GetComponent<ArmUseItem>().useItemDelegate = null;
         armTip.GetComponent<ArmUseItem>().stopUsingItemDelegate = null;
 
-        //// Enable the gravity on the rigidbody of the dropping item
-        //droppingItem.GetComponent<Rigidbody>().useGravity = true;
-        // If the item can be lifted by the arm, then restore the drag, angular drag, and mass of the dropping item
-        if (droppingItem.GetComponent<ItemInfo>().itemWeight <= armLiftingStrength)
+        // Enable the gravity on the rigidbody of the dropping item
+        droppingItem.GetComponent<Rigidbody>().useGravity = true;
+        // If the item can be used, then restore the drag, angular drag, and mass of the dropping item
+        if (droppingItem.GetComponent<ItemInfo>().canUse)
         {
-            //droppingItem.GetComponent<Rigidbody>().drag = droppingItem.GetComponent<ItemInfo>().normalDrag;
-            //droppingItem.GetComponent<Rigidbody>().angularDrag = droppingItem.GetComponent<ItemInfo>().normalAngularDrag;
-            //droppingItem.GetComponent<Rigidbody>().mass =
-            //droppingItem.GetComponent<ItemInfo>().normalMass;
+            droppingItem.GetComponent<Rigidbody>().drag = droppingItem.GetComponent<ItemInfo>().normalDrag;
+            droppingItem.GetComponent<Rigidbody>().angularDrag = droppingItem.GetComponent<ItemInfo>().normalAngularDrag;
+            droppingItem.GetComponent<Rigidbody>().mass =
+            droppingItem.GetComponent<ItemInfo>().normalMass;
             //// Turn on the collider
             //TurnOnColliders(armTip.GetComponent<ArmUseItem>().currentlyHoldingItem);
             // Change the item to not kinematic
-            droppingItem.GetComponent<Rigidbody>().isKinematic = false;
+            //droppingItem.GetComponent<Rigidbody>().isKinematic = false;
         }
-        else
+        //else
+        //{
+        // Destroy the fixed joint in the item that's currently holding by the armTip
+        if (armTip.GetComponent<FixedJoint>())
         {
-            // Destroy the fixed joint in the item that's currently holding by the armTip
-            if (droppingItem.GetComponent<FixedJoint>())
-            {
-                Destroy(droppingItem.GetComponent<FixedJoint>());
-            }
+            //Destroy(droppingItem.GetComponent<FixedJoint>());
+            Destroy(armTip.GetComponent<FixedJoint>());
         }
+        //}
 
         droppingItem.GetComponent<ItemInfo>().isBeingHeld = false;
         droppingItem.GetComponent<ItemInfo>().holdingArm = null;
@@ -506,11 +536,17 @@ public class ControlArm_UsingPhysics : ControlArm
 
         if (moveBody)
         {
-            targetPosition = armTip.position + (new Vector3(Mathf.Sin(joyStickRotationAngle * Mathf.Deg2Rad), 0, Mathf.Cos(joyStickRotationAngle * Mathf.Deg2Rad)) * 
+            targetPosition = armTip.position + (new Vector3(Mathf.Sin(joyStickRotationAngle * Mathf.Deg2Rad), 0, Mathf.Cos(joyStickRotationAngle * Mathf.Deg2Rad)) *
                                                 joyStickLength * armMaxLength);
             //print("armTip: " + armTip.position + ", target: " + targetPosition);
             //Debug.DrawLine(armTip.position, armTip.position + new Vector3(Mathf.Sin(joyStickRotationAngle * Mathf.Deg2Rad), 0, Mathf.Cos(joyStickRotationAngle * Mathf.Deg2Rad)) * joyStickLength * armMaxLength);
             //print("joystick angle: " + joyStickRotationAngle);
+        }
+        else if (armTip.GetComponent<ArmUseItem>().currentlyHoldingItem != null &&
+                 armTip.GetComponent<ArmUseItem>().currentlyHoldingItem.GetComponent<ItemInfo>().itemWeight > armLiftingStrength) // If move heavy item
+        {
+            targetPosition = body.position + (new Vector3(Mathf.Sin(joyStickRotationAngle * Mathf.Deg2Rad), 0, Mathf.Cos(joyStickRotationAngle * Mathf.Deg2Rad)) *
+                                                joyStickLength * armMaxLength);
         }
         else
         {
@@ -526,8 +562,8 @@ public class ControlArm_UsingPhysics : ControlArm
         {
             if (armCurrentStamina >= armMaximumStamina) // If the arm just start moving and its stamina is full, then add an extra "bonus" force
             {
-                if (isGrabbingFloor || 
-                    (armTip.GetComponent<ArmUseItem>().currentlyHoldingItem != null && 
+                if (isGrabbingFloor ||
+                    (armTip.GetComponent<ArmUseItem>().currentlyHoldingItem != null &&
                      armTip.GetComponent<ArmUseItem>().currentlyHoldingItem.GetComponent<ItemInfo>().itemWeight > armLiftingStrength)) // Only give bonus when the arm is moving body or other large objects
                 {
                     return Vector3.Normalize(targetPosition - currentPosition) * CalculateCurrentArmStrength() * maxStaminaInitialBurstMulti;
@@ -653,7 +689,7 @@ public class ControlArm_UsingPhysics : ControlArm
     public override void MoveBody()
     {
         //body.localPosition = new Vector3(0, 0, joyStickLength * armMaxLength);
-        body.GetComponent<Rigidbody>().AddForce(CalculateArmForce(true, body.position, armTip.GetComponent<Rigidbody>().mass), ForceMode.Impulse);
+        body.GetComponent<Rigidbody>().AddForce(CalculateArmForce(true, body.position, body.GetComponent<Rigidbody>().mass), ForceMode.Impulse);
 
         //if (bodyWallDetector.isColliding)
         //{
@@ -681,6 +717,16 @@ public class ControlArm_UsingPhysics : ControlArm
             }
         }
         */
+    }
+
+    /// <summary>
+    /// Moving the heavy item that is currently holding in the armTip
+    /// </summary>
+    /// <param name="movingItem"></param>
+    public void MoveHeavyItem(GameObject movingItem)
+    {
+        //movingItem.GetComponent<Rigidbody>().AddForce(CalculateArmForce(false, movingItem.transform.position, movingItem.GetComponent<Rigidbody>().mass), ForceMode.Impulse);
+        armTip.GetComponent<Rigidbody>().AddForce(CalculateArmForce(false, armTip.transform.position, movingItem.GetComponent<Rigidbody>().mass), ForceMode.Impulse);
     }
 
     /// <summary>
