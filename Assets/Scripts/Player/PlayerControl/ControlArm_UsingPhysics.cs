@@ -28,6 +28,7 @@ public class ControlArm_UsingPhysics : ControlArm
     public float armStaminaDefaultRecoverSpeed; // The default speed each arm will recharge its stamina
     public float armStaminaConsumptionRateWhileMovingBody; // How much stamina the arm will consume per sec while it is moving the body
     public float maxStaminaInitialBurstMulti; // How much times of the default force the arm can apply when it just start moving while on maximum stamina
+    public Transform armTipStretchLimiter; // The inverted sphere collider that limits how far the armTips can be away from the body
 
     //public bool isGrabbingFloor; // If the armTip is grabbing floor
     //public float joyStickRotationAngle; // The rotation of the arm
@@ -39,6 +40,12 @@ public class ControlArm_UsingPhysics : ControlArm
     void Start()
     {
         armCurrentStamina = armMaximumStamina;
+
+        // Set up the arm stretch limiter
+        if (isLeftArm)
+        {
+            //armTipStretchLimiter.localScale = armTipStretchLimiter.localScale * armMaxLength * 2;
+        }
     }
 
     // Update is called once per frame
@@ -104,12 +111,12 @@ public class ControlArm_UsingPhysics : ControlArm
         if (isGrabbingFloor)
         {
             //armTip.position = bodyRotatingCenter.position;
-            RotateBody();
+            //RotateBody();
             MoveBody();
             armTip.position = armTipGrabbingPosition;
         }
 
-        UpdateArmTransform();
+        //UpdateArmTransform();
         UpdateArmStamina();
         // Test
         //TestControllerInput();
@@ -547,6 +554,25 @@ public class ControlArm_UsingPhysics : ControlArm
         {
             targetPosition = body.position + (new Vector3(Mathf.Sin(joyStickRotationAngle * Mathf.Deg2Rad), 0, Mathf.Cos(joyStickRotationAngle * Mathf.Deg2Rad)) *
                                                 joyStickLength * armMaxLength);
+
+
+
+            //// If the arm will collide on something within the current stretching length
+            //RaycastHit hit;
+            //// Don't extend if the armTip will go into collider
+            //if (Physics.Raycast(transform.position - transform.forward * collisionRaycastOriginSetBackDistance, transform.forward,
+            //    out hit, joyStickLength * armMaxLength + collisionRaycastOriginSetBackDistance + armTip.localScale.x / 2f, armCollidingLayer))
+            //{
+            //    // If the ray hits the object that is currently holding by the armTip, then ignore it, don't retract the arm
+            //    if (armTip.GetComponent<ArmUseItem>().currentlyHoldingItem == null ||
+            //        hit.transform != armTip.GetComponent<ArmUseItem>().currentlyHoldingItem.transform)
+            //    {
+            //        //print(hit.transform.name);
+            //        armTip.localPosition =
+            //            //new Vector3(0, 0, hit.distance - armTip.localScale.x / Mathf.Cos(Vector3.Angle(hit.normal, transform.forward) * Mathf.Deg2Rad));
+            //            new Vector3(0, 0, hit.distance - collisionRaycastOriginSetBackDistance);
+            //    }
+            //}
         }
         else
         {
@@ -599,7 +625,14 @@ public class ControlArm_UsingPhysics : ControlArm
         //    armTip.GetComponent<Rigidbody>().AddForce(Vector3.Normalize(targetArmTipPosition - armTip.transform.position) * CalculateCurrentArmStrength(),
         //                                              ForceMode.Impulse);
         //}
-        armTip.GetComponent<Rigidbody>().AddForce(CalculateArmForce(false, armTip.transform.position, armTip.GetComponent<Rigidbody>().mass), ForceMode.Impulse);
+        Vector3 armTipAppliedForce = CalculateArmForce(false, armTip.transform.position, armTip.GetComponent<Rigidbody>().mass);
+        armTip.GetComponent<Rigidbody>().AddForce(armTipAppliedForce, ForceMode.Impulse);
+
+        //// If the armTip is extending out of the max arm stretch length, then apply negative force to push it back
+        //if (Vector3.Distance(armTip.position, body.position) > armMaxLength)
+        //{
+        //    armTip.GetComponent<Rigidbody>().AddForce(-armTipAppliedForce, ForceMode.Impulse);
+        //}
 
         // Calculate how long the arm extends
         //armTip.localPosition = new Vector3(0, 0, joyStickLength * armMaxLength);
@@ -622,23 +655,6 @@ public class ControlArm_UsingPhysics : ControlArm
         //                //new Vector3(0, 0, hit.distance - armTip.localScale.x / Mathf.Cos(Vector3.Angle(hit.normal, transform.forward) * Mathf.Deg2Rad));
         //                new Vector3(0, 0, hit.distance);
         //        }
-        //    }
-        //}
-
-        //// If the arm will collide on something within the current stretching length
-        //RaycastHit hit;
-        //// Don't extend if the armTip will go into collider
-        //if (Physics.Raycast(transform.position - transform.forward * collisionRaycastOriginSetBackDistance, transform.forward,
-        //    out hit, joyStickLength * armMaxLength + collisionRaycastOriginSetBackDistance + armTip.localScale.x / 2f, armCollidingLayer))
-        //{
-        //    // If the ray hits the object that is currently holding by the armTip, then ignore it, don't retract the arm
-        //    if (armTip.GetComponent<ArmUseItem>().currentlyHoldingItem == null ||
-        //        hit.transform != armTip.GetComponent<ArmUseItem>().currentlyHoldingItem.transform)
-        //    {
-        //        //print(hit.transform.name);
-        //        armTip.localPosition =
-        //            //new Vector3(0, 0, hit.distance - armTip.localScale.x / Mathf.Cos(Vector3.Angle(hit.normal, transform.forward) * Mathf.Deg2Rad));
-        //            new Vector3(0, 0, hit.distance - collisionRaycastOriginSetBackDistance);
         //    }
         //}
     }
