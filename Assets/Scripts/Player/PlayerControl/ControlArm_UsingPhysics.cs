@@ -82,8 +82,9 @@ public class ControlArm_UsingPhysics : ControlArm
         {
             if (armTip.GetComponent<ArmUseItem>().currentlyHoldingItem == null) // If the arm is not holding item
             {
-                RotateArm(isLeftArm);
-                StretchArm(isLeftArm);
+                //RotateArm(isLeftArm);
+                //StretchArm(isLeftArm);
+                MoveArm(isLeftArm);
                 DetectIfPickingUpItem();
             }
             else if (armTip.GetComponent<ArmUseItem>().currentlyHoldingItem != null) // If the arm is holding item
@@ -514,27 +515,14 @@ public class ControlArm_UsingPhysics : ControlArm
     }
     */
 
-    /// <summary>
-    /// Rotate the arm according to the joystick's rotation
-    /// </summary>
-    /// <param name="left"></param>
-    public override void RotateArm(bool left)
-    {
-        //Vector3 previousEuler = transform.eulerAngles;
-        //Vector3 previousArmTipPosition = armTip.position;
-
-        // Rotate the arm according to the calculated rotation
-        transform.eulerAngles = new Vector3(0, joyStickRotationAngle, 0);
-
-        //if (isColliding)
-        //{
-        //    // Don't rotate if the armTip will go into collider
-        //    if (Vector3.SqrMagnitude(armTip.position - collidingPoint) <= Vector3.SqrMagnitude(previousArmTipPosition - collidingPoint))
-        //    {
-        //        transform.eulerAngles = previousEuler;
-        //    }
-        //}
-    }
+    ///// <summary>
+    ///// Rotate the arm according to the joystick's rotation
+    ///// </summary>
+    ///// <param name="left"></param>
+    //public override void RotateArm(bool left)
+    //{
+    //    transform.eulerAngles = new Vector3(0, joyStickRotationAngle, 0);
+    //}
 
     // Calculate the direction and the amount of the force that should be applied
     public Vector3 CalculateArmForce(bool moveBody, Vector3 currentPosition, float carryingWeight)
@@ -549,34 +537,39 @@ public class ControlArm_UsingPhysics : ControlArm
             //Debug.DrawLine(armTip.position, armTip.position + new Vector3(Mathf.Sin(joyStickRotationAngle * Mathf.Deg2Rad), 0, Mathf.Cos(joyStickRotationAngle * Mathf.Deg2Rad)) * joyStickLength * armMaxLength);
             //print("joystick angle: " + joyStickRotationAngle);
         }
-        else if (armTip.GetComponent<ArmUseItem>().currentlyHoldingItem != null &&
-                 armTip.GetComponent<ArmUseItem>().currentlyHoldingItem.GetComponent<ItemInfo>().itemWeight > armLiftingStrength) // If move heavy item
-        {
-            targetPosition = body.position + (new Vector3(Mathf.Sin(joyStickRotationAngle * Mathf.Deg2Rad), 0, Mathf.Cos(joyStickRotationAngle * Mathf.Deg2Rad)) *
-                                                joyStickLength * armMaxLength);
+        //else if (armTip.GetComponent<ArmUseItem>().currentlyHoldingItem != null &&
+        //         armTip.GetComponent<ArmUseItem>().currentlyHoldingItem.GetComponent<ItemInfo>().itemWeight > armLiftingStrength) // If move heavy item
+        //{
+        //    targetPosition = body.position + (new Vector3(Mathf.Sin(joyStickRotationAngle * Mathf.Deg2Rad), 0, Mathf.Cos(joyStickRotationAngle * Mathf.Deg2Rad)) *
+        //                                        joyStickLength * armMaxLength);
 
 
 
-            //// If the arm will collide on something within the current stretching length
-            //RaycastHit hit;
-            //// Don't extend if the armTip will go into collider
-            //if (Physics.Raycast(transform.position - transform.forward * collisionRaycastOriginSetBackDistance, transform.forward,
-            //    out hit, joyStickLength * armMaxLength + collisionRaycastOriginSetBackDistance + armTip.localScale.x / 2f, armCollidingLayer))
-            //{
-            //    // If the ray hits the object that is currently holding by the armTip, then ignore it, don't retract the arm
-            //    if (armTip.GetComponent<ArmUseItem>().currentlyHoldingItem == null ||
-            //        hit.transform != armTip.GetComponent<ArmUseItem>().currentlyHoldingItem.transform)
-            //    {
-            //        //print(hit.transform.name);
-            //        armTip.localPosition =
-            //            //new Vector3(0, 0, hit.distance - armTip.localScale.x / Mathf.Cos(Vector3.Angle(hit.normal, transform.forward) * Mathf.Deg2Rad));
-            //            new Vector3(0, 0, hit.distance - collisionRaycastOriginSetBackDistance);
-            //    }
-            //}
-        }
+        //    //// If the arm will collide on something within the current stretching length
+        //    //RaycastHit hit;
+        //    //// Don't extend if the armTip will go into collider
+        //    //if (Physics.Raycast(transform.position - transform.forward * collisionRaycastOriginSetBackDistance, transform.forward,
+        //    //    out hit, joyStickLength * armMaxLength + collisionRaycastOriginSetBackDistance + armTip.localScale.x / 2f, armCollidingLayer))
+        //    //{
+        //    //    // If the ray hits the object that is currently holding by the armTip, then ignore it, don't retract the arm
+        //    //    if (armTip.GetComponent<ArmUseItem>().currentlyHoldingItem == null ||
+        //    //        hit.transform != armTip.GetComponent<ArmUseItem>().currentlyHoldingItem.transform)
+        //    //    {
+        //    //        //print(hit.transform.name);
+        //    //        armTip.localPosition =
+        //    //            //new Vector3(0, 0, hit.distance - armTip.localScale.x / Mathf.Cos(Vector3.Angle(hit.normal, transform.forward) * Mathf.Deg2Rad));
+        //    //            new Vector3(0, 0, hit.distance - collisionRaycastOriginSetBackDistance);
+        //    //    }
+        //    //}
+        //}
+        //else
+        //{
+        //    targetPosition = transform.TransformPoint(new Vector3(0, 0, joyStickLength * armMaxLength));
+        //}
         else
         {
-            targetPosition = transform.TransformPoint(new Vector3(0, 0, joyStickLength * armMaxLength));
+            targetPosition = body.position + (new Vector3(Mathf.Sin(joyStickRotationAngle * Mathf.Deg2Rad), 0, Mathf.Cos(joyStickRotationAngle * Mathf.Deg2Rad)) *
+                                              joyStickLength * armMaxLength);
         }
         float targetDistance = Vector3.Magnitude(targetPosition - currentPosition);
 
@@ -605,59 +598,24 @@ public class ControlArm_UsingPhysics : ControlArm
     }
 
     /// <summary>
-    /// Stretch the arm according to the joystick's tilt
+    /// Moves the arm tip
     /// </summary>
     /// <param name="left"></param>
-    public override void StretchArm(bool left)
+    public void MoveArm(bool left)
     {
-        //Vector3 targetArmTipPosition = transform.TransformPoint(new Vector3(0, 0, joyStickLength * armMaxLength));
-        //float targetDistance = Vector3.Magnitude(targetArmTipPosition - armTip.transform.position);
-        //armTip.GetComponent<Rigidbody>().velocity = Vector3.zero;
-        //armTip.GetComponent<Rigidbody>().AddForce(Vector3.Normalize(targetArmTipPosition - armTip.transform.position) * Mathf.Pow(joyStickLength * armMaxLength, 2) * armTip.GetComponent<Rigidbody>().mass, 
-        //                                          ForceMode.Impulse);
-        //if (targetDistance <= armStopThreshold)
-        //{
-        //    armTip.GetComponent<Rigidbody>().AddForce(Vector3.Normalize(targetArmTipPosition - armTip.transform.position) * CalculateCurrentArmStrength() * targetDistance,
-        //                                              ForceMode.Impulse);
-        //}
-        //else
-        //{
-        //    armTip.GetComponent<Rigidbody>().AddForce(Vector3.Normalize(targetArmTipPosition - armTip.transform.position) * CalculateCurrentArmStrength(),
-        //                                              ForceMode.Impulse);
-        //}
         Vector3 armTipAppliedForce = CalculateArmForce(false, armTip.transform.position, armTip.GetComponent<Rigidbody>().mass);
         armTip.GetComponent<Rigidbody>().AddForce(armTipAppliedForce, ForceMode.Impulse);
-
-        //// If the armTip is extending out of the max arm stretch length, then apply negative force to push it back
-        //if (Vector3.Distance(armTip.position, body.position) > armMaxLength)
-        //{
-        //    armTip.GetComponent<Rigidbody>().AddForce(-armTipAppliedForce, ForceMode.Impulse);
-        //}
-
-        // Calculate how long the arm extends
-        //armTip.localPosition = new Vector3(0, 0, joyStickLength * armMaxLength);
-        //armTip.GetComponent<Rigidbody>().MovePosition(transform.TransformPoint(new Vector3(0, 0, joyStickLength * armMaxLength)));
-
-        //// If the armTip collide on something
-        //if (arm.GetComponentInChildren<DetectCollision>().isColliding)
-        ////if (armTip.GetComponent<DetectCollision>().isColliding)
-        //{
-        //    RaycastHit hit;
-        //    // Don't extend if the armTip will go into collider
-        //    if (Physics.Raycast(transform.position, transform.forward, out hit, armMaxLength + armTip.localScale.x / 2f, armCollidingLayer))
-        //    {
-        //        // If the ray hits the object that is currently holding by the armTip, then ignore it, don't retract the arm
-        //        if (armTip.GetComponent<ArmUseItem>().currentlyHoldingItem == null ||
-        //            hit.transform != armTip.GetComponent<ArmUseItem>().currentlyHoldingItem.transform)
-        //        {
-        //            //print(hit.transform.name);
-        //            armTip.localPosition =
-        //                //new Vector3(0, 0, hit.distance - armTip.localScale.x / Mathf.Cos(Vector3.Angle(hit.normal, transform.forward) * Mathf.Deg2Rad));
-        //                new Vector3(0, 0, hit.distance);
-        //        }
-        //    }
-        //}
     }
+
+    ///// <summary>
+    ///// Stretch the arm according to the joystick's tilt
+    ///// </summary>
+    ///// <param name="left"></param>
+    //public override void StretchArm(bool left)
+    //{
+    //    Vector3 armTipAppliedForce = CalculateArmForce(false, armTip.transform.position, armTip.GetComponent<Rigidbody>().mass);
+    //    armTip.GetComponent<Rigidbody>().AddForce(armTipAppliedForce, ForceMode.Impulse);
+    //}
 
     /// <summary>
     /// When this armTip start grabbing floor
