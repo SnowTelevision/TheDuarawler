@@ -91,8 +91,9 @@ public class ControlArm_UsingPhysics : ControlArm
             {
                 if (armTip.GetComponent<ArmUseItem>().currentlyHoldingItem.GetComponent<ItemInfo>().itemWeight <= armLiftingStrength) // Is the item is not heavy
                 {
-                    RotateArm(isLeftArm);
-                    StretchArm(isLeftArm);
+                    //RotateArm(isLeftArm);
+                    //StretchArm(isLeftArm);
+                    MoveArm(isLeftArm);
                 }
                 else // If the item is heavy
                 {
@@ -114,7 +115,10 @@ public class ControlArm_UsingPhysics : ControlArm
             //armTip.position = bodyRotatingCenter.position;
             //RotateBody();
             MoveBody();
-            armTip.position = armTipGrabbingPosition;
+            if (armCurrentStamina > 0)
+            {
+                armTip.position = armTipGrabbingPosition;
+            }
         }
 
         //UpdateArmTransform();
@@ -152,12 +156,20 @@ public class ControlArm_UsingPhysics : ControlArm
         if (isGrabbingFloor) // If the arm is grabbing onto floor
         {
             armCurrentStamina -= armStaminaConsumptionRateWhileMovingBody * Time.deltaTime;
+            if (armCurrentStamina < 0) // Prevent the stamina goes below 0
+            {
+                armCurrentStamina = 0;
+            }
         }
         else if (armTip.GetComponent<ArmUseItem>().currentlyHoldingItem != null) // If the arm is holding an item
         {
             if (armTip.GetComponent<ArmUseItem>().currentlyHoldingItem.GetComponent<ItemInfo>().itemWeight > armLiftingStrength)
             {
                 armCurrentStamina -= armStaminaConsumptionRateWhileMovingBody * Time.deltaTime;
+                if (armCurrentStamina < 0) // Prevent the stamina goes below 0
+                {
+                    armCurrentStamina = 0;
+                }
             }
         }
         else
