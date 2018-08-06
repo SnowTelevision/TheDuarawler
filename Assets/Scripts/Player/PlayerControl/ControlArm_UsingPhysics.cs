@@ -587,7 +587,14 @@ public class ControlArm_UsingPhysics : ControlArm
 
         if (targetDistance <= armStopThreshold) // If the current position is close to the target position, then only apply a small force
         {
-            return Vector3.Normalize(targetPosition - currentPosition) * CalculateCurrentArmStrength() * targetDistance;
+            //if (armTip.GetComponent<Rigidbody>().velocity.magnitude * Time.smoothDeltaTime > Vector3.Distance(targetPosition, currentPosition)) // Slow the armTip down if it will shoot over target position
+            //{
+            //    return -armTip.GetComponent<Rigidbody>().velocity * armTip.GetComponent<Rigidbody>().mass;
+            //}
+            //else
+            {
+                return Vector3.Normalize(targetPosition - currentPosition) * CalculateCurrentArmStrength() * targetDistance;
+            }
         }
         else
         {
@@ -601,11 +608,11 @@ public class ControlArm_UsingPhysics : ControlArm
                 }
                 else
                 {
-                    return Vector3.Normalize(targetPosition - currentPosition) * CalculateCurrentArmStrength();
+                    return Vector3.Normalize(targetPosition - currentPosition) * CalculateCurrentArmStrength() * targetDistance;
                 }
             }
 
-            return Vector3.Normalize(targetPosition - currentPosition) * CalculateCurrentArmStrength();
+            return Vector3.Normalize(targetPosition - currentPosition) * CalculateCurrentArmStrength() * targetDistance;
         }
     }
 
