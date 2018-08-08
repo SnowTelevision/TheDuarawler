@@ -545,6 +545,9 @@ public class ControlArm_UsingPhysics : ControlArm
         {
             targetPosition = armTip.position + (new Vector3(Mathf.Sin(joyStickRotationAngle * Mathf.Deg2Rad), 0, Mathf.Cos(joyStickRotationAngle * Mathf.Deg2Rad)) *
                                                 joyStickLength * armMaxLength);
+
+            //print(Vector3.Magnitude(targetPosition - currentPosition) + ", " + armStopThreshold);
+            //print(currentPosition + ", " + targetPosition);
             //print("armTip: " + armTip.position + ", target: " + targetPosition);
             //Debug.DrawLine(armTip.position, armTip.position + new Vector3(Mathf.Sin(joyStickRotationAngle * Mathf.Deg2Rad), 0, Mathf.Cos(joyStickRotationAngle * Mathf.Deg2Rad)) * joyStickLength * armMaxLength);
             //print("joystick angle: " + joyStickRotationAngle);
@@ -587,6 +590,10 @@ public class ControlArm_UsingPhysics : ControlArm
 
         if (targetDistance <= armStopThreshold) // If the current position is close to the target position, then only apply a small force
         {
+            //if (isGrabbingFloor)
+            //{
+            //    print("body reach");
+            //}
             //if (armTip.GetComponent<Rigidbody>().velocity.magnitude * Time.smoothDeltaTime > Vector3.Distance(targetPosition, currentPosition)) // Slow the armTip down if it will shoot over target position
             //{
             //    return -armTip.GetComponent<Rigidbody>().velocity * armTip.GetComponent<Rigidbody>().mass;

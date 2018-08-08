@@ -25,9 +25,14 @@ public class SimplePistolBullet : MonoBehaviour
 
     private void OnTriggerExit(Collider other)
     {
-        if (other.GetComponent<SimplePistol>())
+        if (!GetComponent<Collider>().enabled && other.GetComponent<SimplePistol>())
         {
             GetComponent<Collider>().enabled = true;
         }
+    }
+
+    private void OnCollisionEnter(Collision collision)
+    {
+        //print(collision.collider.name);
     }
 }

@@ -9,6 +9,7 @@ using UnityEngine.Events;
 public class ControlArm : ArmUseItem
 {
     public bool isLeftArm; // Is this the left arm
+    public float joyStickMinDeadZone; // How much the joystick needs to move away from the center to be considered "valid" input
     public Transform armTip; // The tip of the arm
     public Transform arm; // The actual arm that extends from the center of the body to the arm tip
     public float armMaxLength; // How long is the maximum arm length
@@ -409,6 +410,12 @@ public class ControlArm : ArmUseItem
         else
         {
             joyStickLength = Mathf.Clamp01(Mathf.Sqrt(Mathf.Pow(Input.GetAxis("HorizontalRight"), 2) + Mathf.Pow(Input.GetAxis("VerticalRight"), 2)));
+        }
+
+        // Create a min "dead-zone" to ignore the small amount of joystick input when it is released and put to the center
+        if (joyStickLength < joyStickMinDeadZone)
+        {
+            joyStickLength = 0;
         }
     }
 

@@ -31,7 +31,7 @@ public class ItemInfo : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        //CalculatingItemTransform();
+        CalculatingItemTransform();
     }
 
     public void CalculatingItemTransform()
@@ -41,10 +41,10 @@ public class ItemInfo : MonoBehaviour
             // If the item can be lifted by the arm then match its transform with the armTip
             if (itemWeight <= holdingArm.GetComponentInParent<ControlArm>().armLiftingStrength)
             {
-                GetComponent<Rigidbody>().velocity = Vector3.zero;
-                GetComponent<Rigidbody>().angularVelocity = Vector3.zero;
-                transform.rotation = holdingArm.rotation;
-                transform.position = holdingArm.position;
+                //GetComponent<Rigidbody>().velocity = Vector3.zero;
+                //GetComponent<Rigidbody>().angularVelocity = Vector3.zero;
+                transform.eulerAngles = new Vector3(0, holdingArm.GetComponentInParent<ControlArm>().joyStickRotationAngle, 0);
+                //transform.position = holdingArm.position;
                 //print(holdingArm.position);
             }
         }

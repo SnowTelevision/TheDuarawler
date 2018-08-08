@@ -14,7 +14,7 @@ public class SimplePistol : MonoBehaviour
     // Use this for initialization
     void Start()
     {
-        
+
     }
 
     // Update is called once per frame
@@ -28,7 +28,10 @@ public class SimplePistol : MonoBehaviour
     /// </summary>
     public void Shoot()
     {
-        GameObject newPistolBullet = Instantiate(pistolBullet, transform.position, transform.rotation);
+        Quaternion newPistolRotation = Quaternion.identity;
+        newPistolRotation.eulerAngles = new Vector3(0, GetComponent<ItemInfo>().holdingArm.GetComponentInParent<ControlArm>().joyStickRotationAngle, 0);
+        GameObject newPistolBullet = Instantiate(pistolBullet, transform.position, newPistolRotation);
+        //print(GetComponent<ItemInfo>().holdingArm.GetComponentInParent<ControlArm>().joyStickRotationAngle + ", " + transform.eulerAngles.y + ", in fix update: " + Time.inFixedTimeStep);
         //newPistolBullet.transform.LookAt(transform.position + transform.forward);
         newPistolBullet.GetComponent<Rigidbody>().AddForce(pistolInitialVelocity * newPistolBullet.transform.forward, ForceMode.VelocityChange);
         newPistolBullet.GetComponent<SimplePistolBullet>().owner = this;
