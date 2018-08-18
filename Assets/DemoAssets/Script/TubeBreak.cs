@@ -23,7 +23,7 @@ public class TubeBreak : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (timeWasHit == hitToBreak)
+        if (timeWasHit >= hitToBreak)
         {
             Destroy(tutorialTextTriggerBeforeBreak);
             tutorialTextTriggerAfterBreak.SetActive(true);

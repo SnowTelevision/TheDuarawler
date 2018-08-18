@@ -35,6 +35,7 @@ public class ControlArm_UsingPhysics : ControlArm
     //public float joyStickLength; // How much the joystick is pushed away
     public float armCurrentStamina; // This arm's current stamina amount
     public Vector3 armTipGrabbingPosition; // The armTip's position when it starts grabbing
+    public bool inWater; // Is this armTip currently in water
 
     // Use this for initialization
     void Start()
